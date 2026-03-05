@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   # 1. Veritabanı (PostgreSQL)
   db:
-    image: postgres:latest
+    image: postgres:15-alpine
     container_name: bizimsite-db
     environment:
       POSTGRES_USER: postgres
@@ -12,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
