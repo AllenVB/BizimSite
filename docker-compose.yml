@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # 1. Veritabanı (PostgreSQL)
+  db:
+    image: postgres:latest
+    container_name: bizimsite-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bizimsite
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Backend (ASP.NET Core)
+  backend:
+    build: .
+    container_name: bizimsite-api
+    ports:
+      - "5000:80"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=bizimsite;Username=postgres;Password=postgres
+      - ASPNETCORE_ENVIRONMENT=Docker
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bizimsite-network
+
+  # 3. Frontend (React)
+  frontend:
+    build: ./ClientApp
+    container_name: bizimsite-web
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:80/api
+    depends_on:
+      - backend
+    networks:
+      - bizimsite-network
+
+networks:
+  bizimsite-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
