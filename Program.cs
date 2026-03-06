@@ -15,7 +15,11 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Entity Framework Core + PostgreSQL yapılandırması
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .ConfigureWarnings(w => 
+           {
+               w.Log(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning);
+           }));
 
 // JWT Konfigürasyonu
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -61,11 +65,36 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 
 var app = builder.Build();
 
-// Apply migrations automatically
+// Apply migrations automatically with retry logic
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    int maxRetries = 10;
+    int retryCount = 0;
+    
+    while (retryCount < maxRetries)
+    {
+        try
+        {
+            logger.LogInformation("Attempting database migration...");
+            dbContext.Database.Migrate();
+            logger.LogInformation("Database migration completed successfully");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retryCount++;
+            if (retryCount >= maxRetries)
+            {
+                logger.LogError($"Database migration failed after {maxRetries} attempts: {ex.Message}");
+                throw;
+            }
+            logger.LogWarning($"Database connection attempt {retryCount} failed. Retrying in 3 seconds...");
+            Thread.Sleep(3000);
+        }
+    }
 }
 
 // Configure the HTTP request pipeline.

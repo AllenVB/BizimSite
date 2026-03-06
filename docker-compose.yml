@@ -13,9 +13,12 @@ services:
       - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+    networks:
+      - bizimsite-network
 
   # 2. Backend (ASP.NET Core)
   backend:
@@ -24,7 +27,7 @@ services:
     ports:
       - "5000:80"
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=bizimsite;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Server=35.246.220.89;Port=5432;Database=bizimsite;User Id=postgres;Password=7355608Ks.;SSL Mode=Require;Trust Server Certificate=true;
       - ASPNETCORE_ENVIRONMENT=Docker
     depends_on:
       db:
@@ -39,7 +42,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://backend:80/api
+      - REACT_APP_API_URL=http://localhost:5000/api
     depends_on:
       - backend
     networks:

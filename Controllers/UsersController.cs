@@ -66,6 +66,19 @@ public class UsersController : ControllerBase
             // Generate token
             var token = _authService.GenerateJwtToken(user);
 
+            // Save token to database
+            var loginSession = new UserLoginSession
+            {
+                UserId = user.Id,
+                Token = token,
+                CreatedAt = DateTime.Now,
+                ExpiresAt = DateTime.Now.AddHours(1),
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+            };
+            _context.UserLoginSessions.Add(loginSession);
+            await _context.SaveChangesAsync();
+
             var response = new LoginResponse
             {
                 Success = true,
@@ -121,6 +134,19 @@ public class UsersController : ControllerBase
             // Generate token
             var token = _authService.GenerateJwtToken(user);
 
+            // Save token to database
+            var loginSession = new UserLoginSession
+            {
+                UserId = user.Id,
+                Token = token,
+                CreatedAt = DateTime.Now,
+                ExpiresAt = DateTime.Now.AddHours(1),
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+            };
+            _context.UserLoginSessions.Add(loginSession);
+            await _context.SaveChangesAsync();
+
             var response = new LoginResponse
             {
                 Success = true,
@@ -143,6 +169,34 @@ public class UsersController : ControllerBase
         {
             _logger.LogError($"Giriş hatası: {ex.Message}");
             return StatusCode(500, new { message = "Giriş sırasında bir hata oluştu." });
+        }
+    }
+
+    // POST: api/users/logout
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        try
+        {
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            
+            var loginSession = await _context.UserLoginSessions
+                .FirstOrDefaultAsync(s => s.Token == token && !s.IsRevoked);
+
+            if (loginSession != null)
+            {
+                loginSession.IsRevoked = true;
+                loginSession.RevokedAt = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "Çıkış başarılı." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Çıkış hatası: {ex.Message}");
+            return StatusCode(500, new { message = "Çıkış sırasında bir hata oluştu." });
         }
     }
 

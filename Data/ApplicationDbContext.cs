@@ -12,6 +12,7 @@ public class ApplicationDbContext : DbContext
     
     public DbSet<Apartment> Apartments { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<UserLoginSession> UserLoginSessions { get; set; }
     public DbSet<Due> Dues { get; set; }
     public DbSet<Announcement> Announcements { get; set; }
     public DbSet<Expense> Expenses { get; set; }
