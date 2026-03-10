@@ -38,12 +38,12 @@ namespace BizimSite.Migrations
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "OlusturmaTarihi",
                 table: "Users",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: false,
-                oldClrType: typeof(string),
+                oldClrType: typeof(DateTime),
                 oldType: "TEXT");
 
             migrationBuilder.AlterColumn<string>(
@@ -63,10 +63,10 @@ namespace BizimSite.Migrations
                 oldType: "INTEGER",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<bool>(
+            migrationBuilder.AlterColumn<int>(
                 name: "Aktif",
                 table: "Users",
-                type: "boolean",
+                type: "integer",
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -90,18 +90,18 @@ namespace BizimSite.Migrations
                 oldType: "INTEGER")
                 .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "Tarih",
                 table: "Expenses",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: false,
-                oldClrType: typeof(string),
+                oldClrType: typeof(DateTime),
                 oldType: "TEXT");
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "OlusturmaTarihi",
                 table: "Expenses",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "TEXT");
@@ -172,26 +172,26 @@ namespace BizimSite.Migrations
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "OlusturmaTarihi",
                 table: "Dues",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "TEXT");
 
-            migrationBuilder.AlterColumn<bool>(
+            migrationBuilder.AlterColumn<int>(
                 name: "Odendi",
                 table: "Dues",
-                type: "boolean",
+                type: "integer",
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "OdemeTarihi",
                 table: "Dues",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "TEXT",
@@ -265,10 +265,10 @@ namespace BizimSite.Migrations
                 oldType: "TEXT",
                 oldMaxLength: 100);
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "OlusturmaTarihi",
                 table: "Apartments",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "TEXT");
@@ -311,10 +311,10 @@ namespace BizimSite.Migrations
                 oldMaxLength: 20,
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<bool>(
+            migrationBuilder.AlterColumn<int>(
                 name: "Aktif",
                 table: "Apartments",
-                type: "boolean",
+                type: "integer",
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -328,18 +328,18 @@ namespace BizimSite.Migrations
                 oldType: "INTEGER")
                 .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "YayinTarihi",
                 table: "Announcements",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "TEXT");
 
-            migrationBuilder.AlterColumn<bool>(
+            migrationBuilder.AlterColumn<int>(
                 name: "Oncelikli",
                 table: "Announcements",
-                type: "boolean",
+                type: "integer",
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -361,10 +361,10 @@ namespace BizimSite.Migrations
                 oldClrType: typeof(string),
                 oldType: "TEXT");
 
-            migrationBuilder.AlterColumn<DateTime>(
+            migrationBuilder.AlterColumn<string>(
                 name: "BitisTarihi",
                 table: "Announcements",
-                type: "timestamp with time zone",
+                type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "TEXT",
@@ -380,10 +380,10 @@ namespace BizimSite.Migrations
                 oldType: "TEXT",
                 oldMaxLength: 200);
 
-            migrationBuilder.AlterColumn<bool>(
+            migrationBuilder.AlterColumn<int>(
                 name: "Aktif",
                 table: "Announcements",
-                type: "boolean",
+                type: "integer",
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");

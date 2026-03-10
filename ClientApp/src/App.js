@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { apiClient } from './services/apiClient';
 import Navigation from './components/Navigation';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -13,28 +14,42 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (token exists in localStorage)
     const token = localStorage.getItem('token');
     if (token) {
-      setIsAuthenticated(true);
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      }
+      // Fetch user profile from database
+      apiClient.get('/users/profile')
+        .then(data => {
+          if (data.success && data.user) {
+            setIsAuthenticated(true);
+            setUser(data.user);
+          } else {
+            localStorage.removeItem('token');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const handleLogin = (token, userData) => {
+  const handleLogin = (token) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setIsAuthenticated(true);
-    setUser(userData);
+    // Fetch user profile from database
+    apiClient.get('/users/profile')
+      .then(data => {
+        if (data.success && data.user) {
+          setIsAuthenticated(true);
+          setUser(data.user);
+        }
+      });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiClient.post('/users/logout', {});
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setIsAuthenticated(false);
     setUser(null);
   };
