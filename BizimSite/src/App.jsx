@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import AdminHome from './pages/AdminHome';
 import ResidentDashboard from './pages/ResidentDashboard';
+import KapiciHome from './pages/KapiciHome';
 import ChatPanel from './pages/ChatPanel';
 import ProfileSettings from './pages/ProfileSettings';
 import FinancialManagement from './pages/FinancialManagement';
@@ -13,15 +14,10 @@ import Complaints from './pages/Complaints';
 import PaymentHistory from './pages/PaymentHistory';
 import BlockManagement from './pages/BlockManagement';
 import Reports from './pages/Reports';
+import AdminManagement from './pages/AdminManagement';
+import CopTakibi from './pages/CopTakibi';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-
-        {/* Admin Paneli Rotası */}
-       <Route path="/admin/*" element={
+const AdminLayout = () => (
   <div className="flex">
     <Sidebar isAdmin={true} />
     <div className="flex-1">
@@ -34,14 +30,15 @@ function App() {
         <Route path="/announcements" element={<Announcements isAdmin={true} />} />
         <Route path="/complaints" element={<Complaints isAdmin={true} />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/admins" element={<AdminManagement />} />
+        <Route path="/cop" element={<CopTakibi />} />
+        <Route path="/settings" element={<ProfileSettings />} />
       </Routes>
     </div>
   </div>
-          }
-        />
+);
 
-        {/* Sakin Paneli Rotası */}
-        <Route path="/resident/*" element={
+const ResidentLayout = () => (
   <div className="flex">
     <Sidebar isAdmin={false} />
     <div className="flex-1">
@@ -55,17 +52,38 @@ function App() {
         <Route path="/announcements" element={<Announcements isAdmin={false} />} />
         <Route path="/complaints" element={<Complaints isAdmin={false} />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/cop" element={<CopTakibi />} />
       </Routes>
     </div>
   </div>
-          }
-        />
+);
 
-        {/* Bilinmeyen tüm yolları login'e yönlendir */}
+const KapiciLayout = () => (
+  <div className="flex">
+    <Sidebar isAdmin={false} />
+    <div className="flex-1">
+      <Routes>
+        <Route path="/" element={<KapiciHome />} />
+        <Route path="/cop" element={<CopTakibi />} />
+        <Route path="/announcements" element={<Announcements isAdmin={true} />} />
+        <Route path="/complaints" element={<Complaints isAdmin={false} />} />
+        <Route path="/settings" element={<ProfileSettings />} />
+      </Routes>
+    </div>
+  </div>
+);
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/resident/*" element={<ResidentLayout />} />
+        <Route path="/kapici/*" element={<KapiciLayout />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   );
 }
-
 export default App;

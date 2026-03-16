@@ -1,35 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Plus, X, CheckCircle, Clock, MessageCircle, Filter } from 'lucide-react';
+import { AlertTriangle, Plus, X, CheckCircle, Clock, MessageCircle, UserX } from 'lucide-react';
 
 const Complaints = ({ isAdmin = false }) => {
   const [complaints, setComplaints] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [newComplaint, setNewComplaint] = useState({ title: '', description: '', category: 'ariza' });
+  const [newComplaint, setNewComplaint] = useState({ title: '', description: '', category: 'ariza', anonymous: false });
+  const [respondingId, setRespondingId] = useState(null);
+  const [responseText, setResponseText] = useState('');
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('complaints')) || [];
-    setComplaints(saved);
+    setComplaints(JSON.parse(localStorage.getItem('complaints')) || []);
   }, []);
 
   const handleAdd = (e) => {
     e.preventDefault();
     const complaint = {
       id: Date.now(),
-      ...newComplaint,
+      title: newComplaint.title,
+      description: newComplaint.description,
+      category: newComplaint.category,
+      anonymous: newComplaint.anonymous,
       status: 'pending',
       date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
       timestamp: Date.now(),
-      author: currentUser.name || 'Sakin',
-      block: currentUser.block || '-',
-      no: currentUser.no || '-',
+      author: newComplaint.anonymous ? 'Anonim' : (currentUser.name || 'Sakin'),
+      block: newComplaint.anonymous ? '-' : (currentUser.block || '-'),
+      no: newComplaint.anonymous ? '-' : (currentUser.no || '-'),
+      realAuthor: currentUser.name || 'Sakin',
       response: null
     };
     const updated = [complaint, ...complaints];
     setComplaints(updated);
     localStorage.setItem('complaints', JSON.stringify(updated));
-    setNewComplaint({ title: '', description: '', category: 'ariza' });
+    setNewComplaint({ title: '', description: '', category: 'ariza', anonymous: false });
     setShowForm(false);
   };
 
@@ -40,9 +45,6 @@ const Complaints = ({ isAdmin = false }) => {
     setComplaints(updated);
     localStorage.setItem('complaints', JSON.stringify(updated));
   };
-
-  const [respondingId, setRespondingId] = useState(null);
-  const [responseText, setResponseText] = useState('');
 
   const handleRespond = (id) => {
     updateStatus(id, 'resolved', responseText);
@@ -65,13 +67,10 @@ const Complaints = ({ isAdmin = false }) => {
     resolved: { label: 'Çözüldü', color: 'bg-green-100 text-green-700', icon: <CheckCircle size={14} /> }
   };
 
-  const filteredComplaints = filter === 'all'
-    ? complaints
-    : complaints.filter(c => c.status === filter);
-
+  const filteredComplaints = filter === 'all' ? complaints : complaints.filter(c => c.status === filter);
   const displayComplaints = isAdmin
     ? filteredComplaints
-    : filteredComplaints.filter(c => c.author === currentUser.name);
+    : filteredComplaints.filter(c => c.realAuthor === currentUser.name || c.author === currentUser.name);
 
   return (
     <div className="ml-64 p-8 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
@@ -103,13 +102,8 @@ const Complaints = ({ isAdmin = false }) => {
           { key: 'in_progress', label: 'İşleniyor' },
           { key: 'resolved', label: 'Çözüldü' }
         ].map(f => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === f.key
-              ? 'bg-blue-600 text-white'
-              : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-          >
+          <button key={f.key} onClick={() => setFilter(f.key)}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === f.key ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}>
             {f.label}
           </button>
         ))}
@@ -122,11 +116,9 @@ const Complaints = ({ isAdmin = false }) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label>
-              <select
-                value={newComplaint.category}
+              <select value={newComplaint.category}
                 onChange={(e) => setNewComplaint({ ...newComplaint, category: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              >
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="ariza">Arıza</option>
                 <option value="temizlik">Temizlik</option>
                 <option value="gurultu">Gürültü</option>
@@ -137,30 +129,55 @@ const Complaints = ({ isAdmin = false }) => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Başlık</label>
-              <input
-                type="text"
-                value={newComplaint.title}
+              <input type="text" value={newComplaint.title} required
                 onChange={(e) => setNewComplaint({ ...newComplaint, title: e.target.value })}
                 placeholder="Kısa bir açıklama..."
-                required
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Detaylı Açıklama</label>
-              <textarea
-                value={newComplaint.description}
+              <textarea value={newComplaint.description} required rows={4}
                 onChange={(e) => setNewComplaint({ ...newComplaint, description: e.target.value })}
                 placeholder="Sorunu detaylıca anlatın..."
-                required
-                rows={4}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-              />
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
             </div>
-            <button
-              type="submit"
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+
+            {/* Anonim Seçeneği */}
+            <div
+              onClick={() => setNewComplaint({ ...newComplaint, anonymous: !newComplaint.anonymous })}
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                newComplaint.anonymous
+                  ? 'border-violet-400 bg-violet-50'
+                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+              }`}
             >
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                newComplaint.anonymous ? 'bg-violet-600 border-violet-600' : 'border-slate-400 bg-white'
+              }`}>
+                {newComplaint.anonymous && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+              <UserX size={18} className={newComplaint.anonymous ? 'text-violet-600' : 'text-slate-400'} />
+              <div>
+                <p className={`text-sm font-semibold ${newComplaint.anonymous ? 'text-violet-700' : 'text-slate-700'}`}>
+                  Anonim olarak gönder
+                </p>
+                <p className="text-xs text-slate-500">İsminiz yöneticiler tarafından görünmez</p>
+              </div>
+            </div>
+
+            {newComplaint.anonymous && (
+              <div className="flex items-center gap-2 bg-violet-100 border border-violet-200 rounded-lg px-4 py-2">
+                <UserX size={15} className="text-violet-600" />
+                <p className="text-xs text-violet-700 font-medium">Bu talep anonim olarak gönderilecek. İsminiz gizlenecek.</p>
+              </div>
+            )}
+
+            <button type="submit"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold transition-all">
               Talebi Gönder
             </button>
           </div>
@@ -187,11 +204,22 @@ const Complaints = ({ isAdmin = false }) => {
                     <span className={`text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 ${statusLabels[c.status]?.color}`}>
                       {statusLabels[c.status]?.icon} {statusLabels[c.status]?.label}
                     </span>
+                    {c.anonymous && (
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-violet-100 text-violet-700 flex items-center gap-1">
+                        <UserX size={11} /> Anonim
+                      </span>
+                    )}
                   </div>
                   <p className="text-slate-600 mb-3 whitespace-pre-wrap">{c.description}</p>
                   <div className="flex items-center gap-4 text-xs text-slate-400">
                     <span>{c.date}</span>
-                    <span>{c.author} - {c.block} Blok No: {c.no}</span>
+                    {c.anonymous ? (
+                      <span className="flex items-center gap-1 text-violet-500 font-medium">
+                        <UserX size={12} /> Anonim kullanıcı
+                      </span>
+                    ) : (
+                      <span>{c.author} - {c.block} Blok No: {c.no}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -209,24 +237,18 @@ const Complaints = ({ isAdmin = false }) => {
                 <div className="mt-4 pt-4 border-t border-slate-100">
                   {respondingId === c.id ? (
                     <div className="space-y-3">
-                      <textarea
-                        value={responseText}
+                      <textarea value={responseText}
                         onChange={(e) => setResponseText(e.target.value)}
                         placeholder="Yanıtınızı yazın..."
                         rows={2}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm"
-                      />
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm" />
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => handleRespond(c.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                        >
-                          Yanıtla & Çöz
+                        <button onClick={() => handleRespond(c.id)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                          Yanıtla &amp; Çöz
                         </button>
-                        <button
-                          onClick={() => { setRespondingId(null); setResponseText(''); }}
-                          className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-300 transition-all"
-                        >
+                        <button onClick={() => { setRespondingId(null); setResponseText(''); }}
+                          className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-300 transition-all">
                           İptal
                         </button>
                       </div>
@@ -234,17 +256,13 @@ const Complaints = ({ isAdmin = false }) => {
                   ) : (
                     <div className="flex gap-2">
                       {c.status === 'pending' && (
-                        <button
-                          onClick={() => updateStatus(c.id, 'in_progress')}
-                          className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-all"
-                        >
+                        <button onClick={() => updateStatus(c.id, 'in_progress')}
+                          className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-all">
                           İşleme Al
                         </button>
                       )}
-                      <button
-                        onClick={() => setRespondingId(c.id)}
-                        className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-200 transition-all"
-                      >
+                      <button onClick={() => setRespondingId(c.id)}
+                        className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-200 transition-all">
                         Yanıtla
                       </button>
                     </div>

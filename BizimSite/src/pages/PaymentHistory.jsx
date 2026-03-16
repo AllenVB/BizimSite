@@ -1,99 +1,114 @@
 import React, { useState, useEffect } from 'react';
-import { History, CheckCircle, XCircle, Calendar, CreditCard } from 'lucide-react';
+import { History, CheckCircle, Calendar, CreditCard, Search, TrendingUp, ArrowDownLeft } from 'lucide-react';
 
 const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
+  const [search, setSearch] = useState('');
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  const isAdmin = currentUser.role === 'admin';
 
   useEffect(() => {
-    const allPayments = JSON.parse(localStorage.getItem('paymentHistory')) || [];
-    const userPayments = allPayments.filter(p => p.userId === currentUser.id);
-    setPayments(userPayments);
+    const all = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+    if (isAdmin) {
+      setPayments(all);
+    } else {
+      // userId veya email ile eşleştir
+      const mine = all.filter(p =>
+        p.userId === currentUser.id ||
+        p.userEmail === currentUser.email ||
+        p.userName === currentUser.name
+      );
+      setPayments(mine);
+    }
   }, [currentUser.id]);
 
-  const totalPaid = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+  const filtered = payments.filter(p =>
+    p.description?.toLowerCase().includes(search.toLowerCase()) ||
+    p.date?.includes(search) ||
+    (isAdmin && p.userName?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  const paidCount = payments.filter(p => p.status === 'paid').length;
 
   return (
-    <div className="ml-64 p-8 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-white flex items-center gap-3">
-          <History className="text-green-400" /> Ödeme Geçmişi
-        </h1>
-        <p className="text-slate-400 mt-1">Tüm ödeme hareketlerinizi görüntüleyin</p>
-      </div>
+    <div className="ml-64 min-h-screen bg-slate-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+            <History className="text-blue-500" /> {isAdmin ? 'Tüm Aidat Ödemeleri' : 'Ödeme Geçmişim'}
+          </h1>
+          <p className="text-slate-500 mt-1">Tüm aidat ödemelerinin kaydı</p>
+        </div>
 
-      {/* Özet Kartlar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-green-50 rounded-xl"><CreditCard className="text-green-600" size={24} /></div>
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 bg-blue-50 rounded-xl"><TrendingUp size={20} className="text-blue-500" /></div>
+              <span className="text-sm text-slate-500">Toplam Tahsilat</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">₺{totalPaid.toLocaleString('tr-TR')}</p>
           </div>
-          <p className="text-sm text-slate-500">Toplam Ödenen</p>
-          <p className="text-2xl font-bold text-slate-800">₺{totalPaid.toLocaleString('tr-TR')}</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-blue-50 rounded-xl"><CheckCircle className="text-blue-600" size={24} /></div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 bg-green-50 rounded-xl"><CheckCircle size={20} className="text-green-500" /></div>
+              <span className="text-sm text-slate-500">Ödeme Sayısı</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">{paidCount}</p>
           </div>
-          <p className="text-sm text-slate-500">Ödeme Sayısı</p>
-          <p className="text-2xl font-bold text-slate-800">{payments.filter(p => p.status === 'paid').length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-purple-50 rounded-xl"><Calendar className="text-purple-600" size={24} /></div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 bg-purple-50 rounded-xl"><Calendar size={20} className="text-purple-500" /></div>
+              <span className="text-sm text-slate-500">Son Ödeme</span>
+            </div>
+            <p className="text-lg font-bold text-slate-800 truncate">{payments[0]?.date || '-'}</p>
           </div>
-          <p className="text-sm text-slate-500">Son Ödeme</p>
-          <p className="text-2xl font-bold text-slate-800">
-            {payments.length > 0 ? payments[0].date : '-'}
-          </p>
         </div>
-      </div>
 
-      {/* Ödeme Tablosu */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-800">Ödeme Hareketleri</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="font-bold text-slate-800">İşlem Geçmişi</h2>
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={isAdmin ? 'İsim veya tarih ara...' : 'Ara...'}
+                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-400 transition w-52"
+              />
+            </div>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="p-16 text-center">
+              <ArrowDownLeft size={40} className="text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-400">Ödeme kaydı bulunamadı</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {filtered.map((p) => (
+                <div key={p.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition">
+                  <div className="p-3 bg-green-50 rounded-xl flex-shrink-0">
+                    <CreditCard size={18} className="text-green-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-800 truncate">{p.description}</p>
+                    {isAdmin && p.userName && (
+                      <p className="text-xs text-blue-600 font-medium">{p.userName} — {p.block || '-'} Blok No: {p.no || '-'}</p>
+                    )}
+                    <p className="text-sm text-slate-400 mt-0.5 flex items-center gap-1">
+                      <Calendar size={12} /> {p.date}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-slate-800">₺{p.amount?.toLocaleString('tr-TR')}</p>
+                    <span className="text-xs font-semibold px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Ödendi</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        {payments.length === 0 ? (
-          <div className="p-12 text-center">
-            <History size={48} className="text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-400 text-lg">Henüz ödeme kaydı yok</p>
-            <p className="text-slate-300 text-sm mt-1">Aidat ödemenizi yaptıktan sonra burada görünecektir</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Tarih</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Açıklama</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Tutar</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Durum</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-slate-600">{payment.date}</td>
-                    <td className="px-6 py-4 text-sm text-slate-800 font-medium">{payment.description}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-800">₺{payment.amount.toLocaleString('tr-TR')}</td>
-                    <td className="px-6 py-4">
-                      {payment.status === 'paid' ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
-                          <CheckCircle size={12} /> Ödendi
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">
-                          <XCircle size={12} /> Ödenmedi
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );
