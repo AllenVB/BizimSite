@@ -12,6 +12,7 @@ import Announcements from './pages/Announcements';
 import Complaints from './pages/Complaints';
 import PaymentHistory from './pages/PaymentHistory';
 import BlockManagement from './pages/BlockManagement';
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/finances" element={<FinancialManagement isAdmin={true} />} />
         <Route path="/announcements" element={<Announcements isAdmin={true} />} />
         <Route path="/complaints" element={<Complaints isAdmin={true} />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </div>
   </div>
@@ -52,6 +54,7 @@ function App() {
         <Route path="/finances" element={<FinancialManagement isAdmin={false} />} />
         <Route path="/announcements" element={<Announcements isAdmin={false} />} />
         <Route path="/complaints" element={<Complaints isAdmin={false} />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </div>
   </div>

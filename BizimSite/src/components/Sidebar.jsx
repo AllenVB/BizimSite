@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, MessageSquare, LogOut, Settings, Megaphone, AlertTriangle, Building2, History } from 'lucide-react';
+import { Home, Users, CreditCard, MessageSquare, LogOut, Settings, Megaphone, AlertTriangle, Building2, History, BarChart2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = ({ isAdmin }) => {
@@ -13,6 +13,7 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/admin/finances' },
     { icon: <Megaphone size={20} />, text: 'Duyurular', path: '/admin/announcements' },
     { icon: <AlertTriangle size={20} />, text: 'Talepler', path: '/admin/complaints' },
+    { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/admin/reports' },
     { icon: <MessageSquare size={20} />, text: 'Sohbet Paneli', path: '/admin/chat' },
   ] : [
     { icon: <Home size={20} />, text: 'Ana Sayfa', path: '/resident' },
@@ -22,6 +23,7 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <AlertTriangle size={20} />, text: 'Taleplerim', path: '/resident/complaints' },
     { icon: <MessageSquare size={20} />, text: 'Sakinler Sohbet', path: '/resident/chat' },
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/resident/finances' },
+    { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/resident/reports' },
   ];
 
   return (
