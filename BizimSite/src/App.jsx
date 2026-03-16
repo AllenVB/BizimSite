@@ -8,13 +8,17 @@ import FinancialManagement from './pages/FinancialManagement';
 import AidatOde from './pages/AidatOde';
 import Sidebar from './components/Sidebar';
 import UserManagement from './pages/UserManagement';
+import Announcements from './pages/Announcements';
+import Complaints from './pages/Complaints';
+import PaymentHistory from './pages/PaymentHistory';
+import BlockManagement from './pages/BlockManagement';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        
+
         {/* Admin Paneli Rotası */}
        <Route path="/admin/*" element={
   <div className="flex">
@@ -23,12 +27,15 @@ function App() {
       <Routes>
         <Route path="/" element={<AdminHome />} />
         <Route path="/users" element={<UserManagement />} />
+        <Route path="/blocks" element={<BlockManagement />} />
         <Route path="/chat" element={<ChatPanel />} />
         <Route path="/finances" element={<FinancialManagement isAdmin={true} />} />
+        <Route path="/announcements" element={<Announcements isAdmin={true} />} />
+        <Route path="/complaints" element={<Complaints isAdmin={true} />} />
       </Routes>
     </div>
   </div>
-          } 
+          }
         />
 
         {/* Sakin Paneli Rotası */}
@@ -39,13 +46,16 @@ function App() {
       <Routes>
         <Route path="/" element={<ResidentDashboard />} />
         <Route path="/payments" element={<AidatOde />} />
+        <Route path="/payment-history" element={<PaymentHistory />} />
         <Route path="/chat" element={<ChatPanel />} />
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/finances" element={<FinancialManagement isAdmin={false} />} />
+        <Route path="/announcements" element={<Announcements isAdmin={false} />} />
+        <Route path="/complaints" element={<Complaints isAdmin={false} />} />
       </Routes>
     </div>
   </div>
-          } 
+          }
         />
 
         {/* Bilinmeyen tüm yolları login'e yönlendir */}

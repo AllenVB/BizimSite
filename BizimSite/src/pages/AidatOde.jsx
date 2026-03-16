@@ -27,10 +27,25 @@ const AidatOde = () => {
     setPaymentSuccess(true);
     setTimeout(() => {
       const users = JSON.parse(localStorage.getItem('users')) || [];
-      const updatedUsers = users.map(u => u.id === currentUser.id ? { ...u, paid: true } : u);
+      const now = new Date();
+      const paymentDate = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const updatedUsers = users.map(u => u.id === currentUser.id ? { ...u, paid: true, lastPayment: paymentDate } : u);
       localStorage.setItem('users', JSON.stringify(updatedUsers));
-      const updatedUser = { ...currentUser, paid: true };
+      const updatedUser = { ...currentUser, paid: true, lastPayment: paymentDate };
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
+      // Ödeme geçmişine kaydet
+      const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+      paymentHistory.unshift({
+        id: Date.now(),
+        userId: currentUser.id,
+        amount: monthlyAidat,
+        date: paymentDate,
+        description: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Aylık Aidat`,
+        status: 'paid'
+      });
+      localStorage.setItem('paymentHistory', JSON.stringify(paymentHistory));
+
       setTimeout(() => navigate('/resident'), 1000);
     }, 2000);
   };
