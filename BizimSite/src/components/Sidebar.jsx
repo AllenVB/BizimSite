@@ -1,4 +1,4 @@
-import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, Building2, History, BarChart2, Shield, Settings } from 'lucide-react';
+import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, Building2, History, BarChart2, Shield, Settings, PackageOpen } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = ({ isAdmin }) => {
@@ -79,7 +79,7 @@ const Sidebar = ({ isAdmin }) => {
             </button>
           )}
         </div>
-        <button onClick={() => { localStorage.removeItem('currentUser'); navigate('/login'); }}
+        <button onClick={() => { localStorage.removeItem('currentUser'); localStorage.removeItem('token'); navigate('/login'); }}
           className="w-full flex items-center gap-2 text-sm text-red-400 hover:text-red-300 p-2 transition-colors">
           <LogOut size={16} /> Cikis Yap
         </button>
