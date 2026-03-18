@@ -1,0 +1,329 @@
+import React, { useState, useEffect } from "react";
+import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2 } from "lucide-react";
+import { getSuperAdminDashboard, getTenants, createTenant, updateTenant, deleteTenant, getTenantUsers } from "../services/api";
+import { useNavigate } from "react-router-dom";
+
+const SuperAdminPanel = () => {
+  const navigate = useNavigate();
+  const [tab, setTab] = useState("dashboard");
+  const [dashboard, setDashboard] = useState(null);
+  const [tenants, setTenants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editTenant, setEditTenant] = useState(null);
+  const [expandedTenant, setExpandedTenant] = useState(null);
+  const [tenantUsers, setTenantUsers] = useState([]);
+  const [formData, setFormData] = useState({
+    name: "", slug: "", address: "", phone: "", planType: "basic",
+    adminName: "", adminEmail: "", adminPassword: ""
+  });
+  const [editData, setEditData] = useState({ planType: "basic", isActive: true, expiresAt: "" });
+
+  useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [dash, ten] = await Promise.all([getSuperAdminDashboard(), getTenants()]);
+      setDashboard(dash.data);
+      setTenants(ten.data);
+    } catch (e) {
+      setError("Veriler yüklenemedi: " + (e.response?.data?.message || e.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      await createTenant(formData);
+      setShowForm(false);
+      setFormData({ name: "", slug: "", address: "", phone: "", planType: "basic", adminName: "", adminEmail: "", adminPassword: "" });
+      loadData();
+    } catch (e) {
+      setError(e.response?.data?.message || "Bina oluşturulamadı!");
+    }
+  };
+
+  const handleToggleActive = async (tenant) => {
+    try {
+      await updateTenant(tenant.id, { isActive: !tenant.isActive, planType: tenant.planType });
+      loadData();
+    } catch (e) {
+      setError("Güncelleme hatası!");
+    }
+  };
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateTenant(editTenant.id, editData);
+      setEditTenant(null);
+      loadData();
+    } catch (e) {
+      setError(e.response?.data?.message || "Güncelleme hatası!");
+    }
+  };
+
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(name + " adlı binayı silmek istediğinize emin misiniz? Tüm veriler kaybolacak!")) return;
+    try {
+      await deleteTenant(id);
+      loadData();
+    } catch (e) {
+      setError(e.response?.data?.message || "Silme hatası!");
+    }
+  };
+
+  const handleExpandTenant = async (id) => {
+    if (expandedTenant === id) { setExpandedTenant(null); setTenantUsers([]); return; }
+    setExpandedTenant(id);
+    try {
+      const res = await getTenantUsers(id);
+      setTenantUsers(res.data);
+    } catch (e) {
+      setTenantUsers([]);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("currentUser");
+    navigate("/login");
+  };
+
+  const planBadge = (plan) => {
+    const colors = { basic: "bg-gray-100 text-gray-700", premium: "bg-blue-100 text-blue-700", enterprise: "bg-purple-100 text-purple-700" };
+    return <span className={"px-2 py-0.5 rounded-full text-xs font-semibold " + (colors[plan] || colors.basic)}>{plan}</span>;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-700 to-indigo-900 text-white px-6 py-4 flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-3">
+          <Building2 size={28} />
+          <div>
+            <h1 className="text-xl font-bold">BizimSite SuperAdmin</h1>
+            <p className="text-indigo-200 text-xs">Tüm binaları yönet</p>
+          </div>
+        </div>
+        <button onClick={handleLogout} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition">
+          <LogOut size={16} /> Çıkış
+        </button>
+      </div>
+
+      {/* Nav Tabs */}
+      <div className="bg-white border-b px-6 flex gap-1">
+        {[["dashboard", "Dashboard"], ["tenants", "Binalar"]].map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={"px-4 py-3 text-sm font-medium border-b-2 transition " + (tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800")}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="p-6 max-w-7xl mx-auto">
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <AlertCircle size={16} /> {error}
+            <button onClick={() => setError("")} className="ml-auto"><X size={14} /></button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={32} className="animate-spin text-indigo-600" />
+          </div>
+        ) : tab === "dashboard" ? (
+          <div>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Genel Bakış</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {[
+                { label: "Toplam Bina", value: dashboard?.totalTenants ?? 0, icon: Building2, color: "indigo" },
+                { label: "Aktif Bina", value: dashboard?.activeTenants ?? 0, icon: Check, color: "green" },
+                { label: "Toplam Kullanıcı", value: dashboard?.totalUsers ?? 0, icon: Users, color: "blue" },
+                { label: "Toplam Gelir", value: (dashboard?.totalRevenue ?? 0).toLocaleString("tr-TR") + " ₺", icon: TrendingUp, color: "amber" },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div key={label} className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                  <div className={"inline-flex p-2 rounded-lg mb-3 bg-" + color + "-50"}>
+                    <Icon size={20} className={"text-" + color + "-600"} />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{value}</p>
+                  <p className="text-xs text-gray-500 mt-1">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <h3 className="font-semibold text-gray-700 mb-3">Binalar</h3>
+              {tenants.slice(0, 8).map(t => (
+                <div key={t.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <span className="font-medium text-sm text-gray-700">{t.name}</span>
+                  <div className="flex items-center gap-2">
+                    {planBadge(t.planType)}
+                    <span className={"text-xs " + (t.isActive ? "text-green-600" : "text-red-500")}>{t.isActive ? "Aktif" : "Pasif"}</span>
+                  </div>
+                </div>
+              ))}
+              {tenants.length === 0 && <p className="text-sm text-gray-400">Henüz bina yok.</p>}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Binalar ({tenants.length})</h2>
+              <button onClick={() => setShowForm(!showForm)}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                <Plus size={16} /> Yeni Bina
+              </button>
+            </div>
+
+            {/* Create Form */}
+            {showForm && (
+              <div className="bg-white border border-indigo-100 rounded-xl shadow-sm p-6 mb-4">
+                <h3 className="font-semibold text-gray-700 mb-4">Yeni Bina Ekle</h3>
+                <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Bina Adı *</label>
+                    <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Güneş Apartmanı" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Slug (URL kısmı) *</label>
+                    <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="gunesapt" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s/g,"")})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Adres</label>
+                    <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="İstanbul, Kadıköy..." value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Telefon</label>
+                    <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="0212 000 00 00" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Plan</label>
+                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" value={formData.planType} onChange={e => setFormData({...formData, planType: e.target.value})}>
+                      <option value="basic">Basic</option>
+                      <option value="premium">Premium</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Admin Adı *</label>
+                    <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Ahmet Yılmaz" value={formData.adminName} onChange={e => setFormData({...formData, adminName: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Admin E-posta *</label>
+                    <input required type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="admin@gunesapt.com" value={formData.adminEmail} onChange={e => setFormData({...formData, adminEmail: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Admin Şifre *</label>
+                    <input required type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="••••••••" value={formData.adminPassword} onChange={e => setFormData({...formData, adminPassword: e.target.value})} />
+                  </div>
+                  <div className="md:col-span-2 flex justify-end gap-3">
+                    <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">İptal</button>
+                    <button type="submit" className="px-6 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Oluştur</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Edit Modal */}
+            {editTenant && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                  <h3 className="font-bold text-gray-800 mb-4">{editTenant.name} — Düzenle</h3>
+                  <form onSubmit={handleEdit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Plan</label>
+                      <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={editData.planType} onChange={e => setEditData({...editData, planType: e.target.value})}>
+                        <option value="basic">Basic</option>
+                        <option value="premium">Premium</option>
+                        <option value="enterprise">Enterprise</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Bitiş Tarihi (opsiyonel)</label>
+                      <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={editData.expiresAt} onChange={e => setEditData({...editData, expiresAt: e.target.value})} />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-700">Durum:</span>
+                      <button type="button" onClick={() => setEditData({...editData, isActive: !editData.isActive})} className={"flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold transition " + (editData.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600")}>
+                        {editData.isActive ? <><ToggleRight size={18} /> Aktif</> : <><ToggleLeft size={18} /> Pasif</>}
+                      </button>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button type="button" onClick={() => setEditTenant(null)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
+                      <button type="submit" className="px-6 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg">Kaydet</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Tenant List */}
+            <div className="space-y-3">
+              {tenants.length === 0 && !showForm && (
+                <div className="text-center py-16 text-gray-400">
+                  <Building2 size={40} className="mx-auto mb-3 opacity-30" />
+                  <p>Henüz bina yok. Yeni bina ekleyin.</p>
+                </div>
+              )}
+              {tenants.map(t => (
+                <div key={t.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Building2 size={20} className="text-indigo-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-gray-800">{t.name}</span>
+                        {planBadge(t.planType)}
+                        <span className={"text-xs font-medium " + (t.isActive ? "text-green-600" : "text-red-500")}>{t.isActive ? "● Aktif" : "● Pasif"}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{t.slug}.bizimsite.com · {t.userCount ?? 0} kullanıcı{t.address ? " · " + t.address : ""}</p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button onClick={() => handleExpandTenant(t.id)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition" title="Kullanıcıları gör">
+                        {expandedTenant === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                      <button onClick={() => { setEditTenant(t); setEditData({ planType: t.planType, isActive: t.isActive, expiresAt: t.expiresAt ? t.expiresAt.substring(0,10) : "" }); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Düzenle">
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleToggleActive(t)} className={"p-2 rounded-lg transition " + (t.isActive ? "text-green-500 hover:bg-green-50" : "text-red-400 hover:bg-red-50")} title={t.isActive ? "Pasife al" : "Aktife al"}>
+                        {t.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                      </button>
+                      <button onClick={() => handleDelete(t.id, t.name)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Sil">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  {expandedTenant === t.id && (
+                    <div className="border-t bg-gray-50 px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">KULLANICILAR</p>
+                      {tenantUsers.length === 0 ? (
+                        <p className="text-xs text-gray-400">Kullanıcı bulunamadı.</p>
+                      ) : (
+                        <div className="space-y-1">
+                          {tenantUsers.map(u => (
+                            <div key={u.id} className="flex items-center justify-between text-xs py-1">
+                              <span className="text-gray-700 font-medium">{u.name}</span>
+                              <span className="text-gray-400">{u.email} · <span className="text-indigo-500">{u.role}</span></span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SuperAdminPanel;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, X, CheckCircle, Clock, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, Plus, X, CheckCircle, Clock, User, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { getBorrowRequests, createBorrowRequest, respondBorrow } from '../services/api';
 
 const TEMPLATE_RESPONSES = [
   { id: 'yes', label: '✅ Elimde var, verebilirim', color: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' },
@@ -14,81 +15,51 @@ const OduncPanel = () => {
   const [requests, setRequests] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ item: '', description: '', duration: '1 gün' });
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  const isAdmin = currentUser.role === 'admin';
 
-  useEffect(() => {
-    setRequests(JSON.parse(localStorage.getItem('oduncRequests')) || []);
-  }, []);
+  useEffect(() => { loadRequests(); }, []);
 
-  const save = (data) => {
-    localStorage.setItem('oduncRequests', JSON.stringify(data));
-    setRequests(data);
+  const loadRequests = async () => {
+    setLoading(true);
+    try {
+      const res = await getBorrowRequests();
+      setRequests(res.data);
+    } catch (e) {
+      setError('Veriler yüklenemedi.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const req = {
-      id: Date.now(),
-      item: form.item,
-      description: form.description,
-      duration: form.duration,
-      author: currentUser.name || 'Sakin',
-      block: currentUser.block || '-',
-      no: currentUser.no || '-',
-      userId: currentUser.id,
-      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }),
-      status: 'open',
-      responses: []
-    };
-    save([req, ...requests]);
-    setForm({ item: '', description: '', duration: '1 gün' });
-    setShowForm(false);
+    setSubmitting(true);
+    try {
+      await createBorrowRequest({ itemName: form.item, description: form.description, duration: form.duration });
+      setForm({ item: '', description: '', duration: '1 gün' });
+      setShowForm(false);
+      loadRequests();
+    } catch (e) {
+      setError(e.response?.data?.message || 'İstek oluşturulamadı!');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleResponse = (reqId, template) => {
-    const alreadyAnswered = requests.find(r => r.id === reqId)?.responses?.find(
-      res => res.userId === currentUser.id
-    );
-    if (alreadyAnswered) return;
-
-    const updated = requests.map(r => {
-      if (r.id !== reqId) return r;
-      return {
-        ...r,
-        responses: [...(r.responses || []), {
-          id: Date.now(),
-          userId: currentUser.id,
-          author: currentUser.name || 'Sakin',
-          block: currentUser.block || '-',
-          no: currentUser.no || '-',
-          templateId: template.id,
-          label: template.label,
-          date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })
-        }]
-      };
-    });
-    save(updated);
+  const handleResponse = async (reqId, template) => {
+    try {
+      await respondBorrow(reqId, { responseType: template.id });
+      loadRequests();
+    } catch (e) {
+      setError(e.response?.data?.message || 'Yanıt gönderilemedi!');
+    }
   };
 
-  const removeResponse = (reqId, resId) => {
-    const updated = requests.map(r => {
-      if (r.id !== reqId) return r;
-      return { ...r, responses: r.responses.filter(res => res.id !== resId) };
-    });
-    save(updated);
-  };
-
-  const closeRequest = (reqId) => {
-    const updated = requests.map(r => r.id === reqId ? { ...r, status: 'closed' } : r);
-    save(updated);
-  };
-
-  const deleteRequest = (reqId) => {
-    save(requests.filter(r => r.id !== reqId));
-  };
-
-  const isAdmin = currentUser.role === 'admin' || currentUser.isMainAdmin;
   const openCount = requests.filter(r => r.status === 'open').length;
 
   return (
@@ -108,6 +79,12 @@ const OduncPanel = () => {
             {showForm ? 'İptal' : 'İstek Oluştur'}
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2 text-sm">
+            {error} <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+          </div>
+        )}
 
         {/* Yeni istek formu */}
         {showForm && (
@@ -137,8 +114,9 @@ const OduncPanel = () => {
                   <option>Belirsiz</option>
                 </select>
               </div>
-              <button type="submit"
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-bold transition">
+              <button type="submit" disabled={submitting}
+                className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                {submitting && <Loader2 size={16} className="animate-spin" />}
                 İsteği Yayınla
               </button>
             </div>
@@ -146,7 +124,11 @@ const OduncPanel = () => {
         )}
 
         {/* İstek listesi */}
-        {requests.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={32} className="animate-spin text-amber-500" />
+          </div>
+        ) : requests.length === 0 ? (
           <div className="bg-white rounded-2xl p-16 text-center border border-slate-100">
             <Package size={48} className="text-slate-300 mx-auto mb-4" />
             <p className="text-slate-400">Henüz ödünç isteği yok</p>
@@ -158,16 +140,17 @@ const OduncPanel = () => {
               const myResponse = req.responses?.find(r => r.userId === currentUser.id);
               const isOwner = req.userId === currentUser.id;
               const isExpanded = expandedId === req.id;
-              const yesCount = req.responses?.filter(r => r.templateId === 'yes').length || 0;
+              const yesCount = req.responses?.filter(r => r.responseType === 'yes').length || 0;
+
+              const templateLabel = (type) => TEMPLATE_RESPONSES.find(t => t.id === type)?.label || type;
 
               return (
                 <div key={req.id} className={`bg-white rounded-2xl shadow-sm border transition-all ${req.status === 'closed' ? 'opacity-60 border-slate-100' : 'border-amber-100'}`}>
-                  {/* Kart başlığı */}
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span className="text-lg font-bold text-slate-800">🔧 {req.item}</span>
+                          <span className="text-lg font-bold text-slate-800">🔧 {req.itemName}</span>
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${req.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                             {req.status === 'open' ? 'Açık' : 'Kapatıldı'}
                           </span>
@@ -178,25 +161,11 @@ const OduncPanel = () => {
                           )}
                         </div>
                         {req.description && <p className="text-slate-600 text-sm mb-2">{req.description}</p>}
-                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                          <span className="flex items-center gap-1"><User size={11} /> {req.author} — {req.block} Blok No:{req.no}</span>
-                          <span>📅 {req.date}</span>
-                          <span>⏱ {req.duration}</span>
+                        <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+                          <span className="flex items-center gap-1"><User size={11} /> {req.userName}{req.userBlock ? ` — ${req.userBlock} Blok No:${req.userNo}` : ''}</span>
+                          <span>📅 {new Date(req.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</span>
+                          {req.duration && <span>⏱ {req.duration}</span>}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {isOwner && req.status === 'open' && (
-                          <button onClick={() => closeRequest(req.id)}
-                            className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-semibold transition flex items-center gap-1">
-                            <CheckCircle size={12} /> Kapat
-                          </button>
-                        )}
-                        {(isOwner || isAdmin) && (
-                          <button onClick={() => deleteRequest(req.id)}
-                            className="text-xs px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition">
-                            <X size={14} />
-                          </button>
-                        )}
                       </div>
                     </div>
 
@@ -213,21 +182,14 @@ const OduncPanel = () => {
                     {isExpanded && req.responses?.length > 0 && (
                       <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
                         {req.responses.map(res => (
-                          <div key={res.id} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-2.5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">
-                                {res.author?.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <span className="text-sm font-medium text-slate-700">{res.label}</span>
-                                <p className="text-xs text-slate-400">{res.author} · {res.block} Blok No:{res.no}</p>
-                              </div>
+                          <div key={res.id} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-2.5">
+                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">
+                              {res.userName?.charAt(0).toUpperCase()}
                             </div>
-                            {(res.userId === currentUser.id || isAdmin) && (
-                              <button onClick={() => removeResponse(req.id, res.id)} className="text-slate-300 hover:text-red-400 transition">
-                                <X size={14} />
-                              </button>
-                            )}
+                            <div>
+                              <span className="text-sm font-medium text-slate-700">{templateLabel(res.responseType)}</span>
+                              <p className="text-xs text-slate-400">{res.userName}</p>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -239,10 +201,7 @@ const OduncPanel = () => {
                         {myResponse ? (
                           <div className="flex items-center gap-2 text-sm">
                             <span className="text-slate-500">Yanıtınız:</span>
-                            <span className="font-semibold text-slate-700">{myResponse.label}</span>
-                            <button onClick={() => removeResponse(req.id, myResponse.id)} className="text-slate-400 hover:text-red-400 transition ml-1">
-                              <X size={14} />
-                            </button>
+                            <span className="font-semibold text-slate-700">{templateLabel(myResponse.responseType)}</span>
                           </div>
                         ) : (
                           <div>

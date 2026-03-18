@@ -18,6 +18,7 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <Shield size={20} />, text: 'Yoneticiler', path: '/admin/admins' },
     { icon: <MessageSquare size={20} />, text: 'Sohbet Paneli', path: '/admin/chat' },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/admin/cop' },
+    { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/admin/odunc' },
   ];
 
   const residentItems = [
@@ -30,6 +31,7 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/resident/finances' },
     { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/resident/reports' },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/resident/cop' },
+    { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/resident/odunc' },
   ];
 
   const kapiciItems = [

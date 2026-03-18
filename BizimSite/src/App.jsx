@@ -16,6 +16,8 @@ import BlockManagement from './pages/BlockManagement';
 import Reports from './pages/Reports';
 import AdminManagement from './pages/AdminManagement';
 import CopTakibi from './pages/CopTakibi';
+import OduncPanel from './pages/OduncPanel';
+import SuperAdminPanel from './pages/SuperAdminPanel';
 
 const AdminLayout = () => (
   <div className="flex">
@@ -32,6 +34,7 @@ const AdminLayout = () => (
         <Route path="/reports" element={<Reports />} />
         <Route path="/admins" element={<AdminManagement />} />
         <Route path="/cop" element={<CopTakibi />} />
+        <Route path="/odunc" element={<OduncPanel />} />
         <Route path="/settings" element={<ProfileSettings />} />
       </Routes>
     </div>
@@ -53,6 +56,7 @@ const ResidentLayout = () => (
         <Route path="/complaints" element={<Complaints isAdmin={false} />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/cop" element={<CopTakibi />} />
+        <Route path="/odunc" element={<OduncPanel />} />
       </Routes>
     </div>
   </div>
@@ -78,6 +82,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/superadmin/*" element={<SuperAdminPanel />} />
         <Route path="/admin/*" element={<AdminLayout />} />
         <Route path="/resident/*" element={<ResidentLayout />} />
         <Route path="/kapici/*" element={<KapiciLayout />} />

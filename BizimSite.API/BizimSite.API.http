@@ -1,0 +1,6 @@
+@BizimSite.API_HostAddress = http://localhost:5223
+
+GET {{BizimSite.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
