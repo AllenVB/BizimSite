@@ -30,6 +30,10 @@ public class AuthController : ControllerBase
         if (user.TenantId != null && user.Tenant?.IsActive == false)
             return Unauthorized(new { message = "Aboneliğiniz aktif değil" });
 
+        // Binada kapıcı var mı?
+        var hasKapici = user.TenantId.HasValue &&
+            await _db.Users.AnyAsync(u => u.TenantId == user.TenantId && u.Role == "kapici");
+
         var token = _jwt.GenerateToken(user);
         return Ok(new {
             token,
@@ -45,7 +49,8 @@ public class AuthController : ControllerBase
             tenantId = user.TenantId,
             tenantSlug = user.Tenant?.Slug,
             tenantName = user.Tenant?.Name,
-            planType = user.Tenant?.PlanType ?? "basic"
+            planType = user.Tenant?.PlanType ?? "basic",
+            hasKapici
         });
     }
 
