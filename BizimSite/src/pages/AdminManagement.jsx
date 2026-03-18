@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, Crown, Mail, Phone, Home } from 'lucide-react';
+import { getAdmins } from '../services/api';
 
 const AdminManagement = () => {
   const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Hem admins listesinden hem users listesinden role=admin olanları birleştir
-    const stored = JSON.parse(localStorage.getItem('admins')) || [];
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const adminUsers = users.filter(u => u.role === 'admin');
-    // Birleştir, duplicate e-postaları çıkar
-    const merged = [...stored];
-    adminUsers.forEach(u => {
-      if (!merged.find(a => a.email === u.email)) merged.push(u);
-    });
-    setAdmins(merged);
+    getAdmins()
+      .then(res => setAdmins(res.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
+
+  if (loading) return (
+    <div className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+      <p className="text-slate-400">Yükleniyor...</p>
+    </div>
+  );
 
   return (
     <div className="ml-64 min-h-screen bg-slate-50 p-8">

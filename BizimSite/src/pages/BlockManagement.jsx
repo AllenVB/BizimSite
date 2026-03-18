@@ -1,53 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Trash2, Edit2, X, Save, Home, Users } from 'lucide-react';
+import { getBlocks, createBlock, updateBlock, deleteBlock, getUsers } from '../services/api';
 
 const BlockManagement = () => {
   const [blocks, setBlocks] = useState([]);
+  const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: '', floors: '', apartmentsPerFloor: '' });
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('blocks')) || [];
-    setBlocks(saved);
-  }, []);
-
-  const saveBlocks = (updated) => {
-    setBlocks(updated);
-    localStorage.setItem('blocks', JSON.stringify(updated));
+  const load = async () => {
+    try {
+      const [b, u] = await Promise.all([getBlocks(), getUsers()]);
+      setBlocks(b.data);
+      setUsers(u.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAdd = (e) => {
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async (e) => {
     e.preventDefault();
-    const block = {
-      id: Date.now(),
-      name: formData.name,
-      floors: parseInt(formData.floors) || 1,
-      apartmentsPerFloor: parseInt(formData.apartmentsPerFloor) || 1,
-      totalApartments: (parseInt(formData.floors) || 1) * (parseInt(formData.apartmentsPerFloor) || 1),
-      createdAt: new Date().toLocaleDateString('tr-TR')
-    };
-    saveBlocks([...blocks, block]);
-    setFormData({ name: '', floors: '', apartmentsPerFloor: '' });
-    setShowForm(false);
+    try {
+      await createBlock({
+        name: formData.name,
+        floors: parseInt(formData.floors) || 1,
+        apartmentsPerFloor: parseInt(formData.apartmentsPerFloor) || 1
+      });
+      setFormData({ name: '', floors: '', apartmentsPerFloor: '' });
+      setShowForm(false);
+      load();
+    } catch { alert('Blok eklenemedi!'); }
   };
 
-  const handleEdit = (e) => {
+  const handleEdit = async (e) => {
     e.preventDefault();
-    const updated = blocks.map(b => b.id === editingId ? {
-      ...b,
-      name: formData.name,
-      floors: parseInt(formData.floors) || 1,
-      apartmentsPerFloor: parseInt(formData.apartmentsPerFloor) || 1,
-      totalApartments: (parseInt(formData.floors) || 1) * (parseInt(formData.apartmentsPerFloor) || 1)
-    } : b);
-    saveBlocks(updated);
-    setEditingId(null);
-    setFormData({ name: '', floors: '', apartmentsPerFloor: '' });
+    try {
+      await updateBlock(editingId, {
+        name: formData.name,
+        floors: parseInt(formData.floors) || 1,
+        apartmentsPerFloor: parseInt(formData.apartmentsPerFloor) || 1
+      });
+      setEditingId(null);
+      setFormData({ name: '', floors: '', apartmentsPerFloor: '' });
+      load();
+    } catch { alert('Güncellenemedi!'); }
   };
 
-  const handleDelete = (id) => {
-    saveBlocks(blocks.filter(b => b.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm('Bu bloğu silmek istiyor musunuz?')) return;
+    try { await deleteBlock(id); load(); } catch { alert('Silinemedi!'); }
   };
 
   const startEdit = (block) => {
@@ -56,9 +63,14 @@ const BlockManagement = () => {
     setShowForm(false);
   };
 
-  const users = JSON.parse(localStorage.getItem('users')) || [];
   const totalApartments = blocks.reduce((sum, b) => sum + b.totalApartments, 0);
   const occupiedCount = users.length;
+
+  if (loading) return (
+    <div className="ml-64 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 flex items-center justify-center">
+      <p className="text-slate-400">Yükleniyor...</p>
+    </div>
+  );
 
   return (
     <div className="ml-64 p-8 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
@@ -92,7 +104,7 @@ const BlockManagement = () => {
         </div>
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
           <div className="p-2 bg-purple-50 rounded-lg w-fit mb-2"><Users size={20} className="text-purple-600" /></div>
-          <p className="text-xs text-gray-500">Dolu Daire</p>
+          <p className="text-xs text-gray-500">Kayıtlı Sakin</p>
           <p className="text-2xl font-bold text-gray-800">{occupiedCount}</p>
         </div>
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -177,7 +189,9 @@ const BlockManagement = () => {
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-800">{block.name} Blok</h3>
-                      <p className="text-xs text-slate-400">{block.createdAt}</p>
+                      <p className="text-xs text-slate-400">
+                        {new Date(block.createdAt).toLocaleDateString('tr-TR')}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -195,11 +209,11 @@ const BlockManagement = () => {
                     <p className="text-lg font-bold text-slate-800">{block.floors}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-lg text-center">
-                    <p className="text-xs text-slate-500">Daire</p>
+                    <p className="text-xs text-slate-500">Toplam Daire</p>
                     <p className="text-lg font-bold text-slate-800">{block.totalApartments}</p>
                   </div>
                   <div className="bg-green-50 p-3 rounded-lg text-center">
-                    <p className="text-xs text-green-600">Dolu</p>
+                    <p className="text-xs text-green-600">Kayıtlı Sakin</p>
                     <p className="text-lg font-bold text-green-700">{blockResidents.length}</p>
                   </div>
                   <div className="bg-orange-50 p-3 rounded-lg text-center">

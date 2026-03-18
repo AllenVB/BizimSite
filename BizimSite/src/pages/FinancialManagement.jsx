@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, Check, X, CalendarDays, RotateCcw, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { getExpenses, createExpense, deleteExpense, getPayments, getAidatConfig, updateAidatConfig, startNewMonth } from '../services/api';
+import { getExpenses, createExpense, deleteExpense, getPayments, getAidatConfig, updateAidatConfig, startNewMonth, rollbackMonth } from '../services/api';
 
 const COLORS = ['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#06B6D4'];
+
+const MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
 const FinancialManagement = ({ isAdmin }) => {
   const [expenses, setExpenses] = useState([]);
@@ -11,9 +13,12 @@ const FinancialManagement = ({ isAdmin }) => {
   const [config, setConfig] = useState(null);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showAidatForm, setShowAidatForm] = useState(false);
+  const [showNewMonthModal, setShowNewMonthModal] = useState(false);
   const [expForm, setExpForm] = useState({ label: '', amount: '' });
   const [aidatForm, setAidatForm] = useState({ dueDay: 1, amount: 0, currentMonth: '' });
+  const [newMonthForm, setNewMonthForm] = useState({ monthName: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const canEdit = currentUser.role === 'admin';
 
@@ -27,6 +32,18 @@ const FinancialManagement = ({ isAdmin }) => {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Yeni ay modal'ını açınca varsayılan değerleri doldur
+  const openNewMonthModal = () => {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const monthName = `${MONTHS[next.getMonth()]} ${next.getFullYear()}`;
+    const startDefault = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2,'0')}-01`;
+    const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+    const endDefault = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2,'0')}-${lastDay}`;
+    setNewMonthForm({ monthName, startDate: startDefault, endDate: endDefault });
+    setShowNewMonthModal(true);
+  };
 
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const totalIncome = payments.reduce((s, p) => s + p.amount, 0);
@@ -56,20 +73,38 @@ const FinancialManagement = ({ isAdmin }) => {
     } catch { alert('Güncellenemedi!'); }
   };
 
-  const handleNewMonth = async () => {
-    const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-    const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const monthName = `${months[nextMonth.getMonth()]} ${nextMonth.getFullYear()}`;
-    if (!confirm(`${monthName} için yeni aidat dönemi başlatılsın mı? Tüm kullanıcıların ödeme durumu sıfırlanacak.`)) return;
+  const handleNewMonth = async (e) => {
+    e.preventDefault();
+    setSaving(true);
     try {
-      await startNewMonth(monthName);
-      alert(`${monthName} aidatları başlatıldı ve duyuru oluşturuldu!`);
+      await startNewMonth({
+        monthName: newMonthForm.monthName,
+        startDate: newMonthForm.startDate ? new Date(newMonthForm.startDate).toISOString() : null,
+        endDate: newMonthForm.endDate ? new Date(newMonthForm.endDate).toISOString() : null,
+      });
+      setShowNewMonthModal(false);
       load();
-    } catch { alert('Hata!'); }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Hata oluştu!');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRollback = async () => {
+    if (!config?.previousMonth) return;
+    if (!confirm(`"${config.previousMonth}" dönemine geri dönmek istediğinizden emin misiniz? Mevcut dönem silinecek.`)) return;
+    try {
+      await rollbackMonth();
+      load();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Geri alınamadı!');
+    }
   };
 
   const pieData = expenses.map(e => ({ name: e.label || e.category, value: e.amount }));
+
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '—';
 
   if (loading) return <div className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center"><p className="text-slate-400">Yükleniyor...</p></div>;
 
@@ -83,18 +118,25 @@ const FinancialManagement = ({ isAdmin }) => {
           </div>
           {canEdit && (
             <div className="flex gap-3">
+              {config?.previousMonth && (
+                <button onClick={handleRollback}
+                  className="border border-orange-300 text-orange-600 px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold hover:bg-orange-50 transition text-sm">
+                  <RotateCcw size={16} /> Geri Al ({config.previousMonth})
+                </button>
+              )}
               <button onClick={() => setShowAidatForm(!showAidatForm)}
                 className="border border-blue-200 text-blue-600 px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold hover:bg-blue-50 transition text-sm">
                 <Edit2 size={16} /> Aidat Takvimi
               </button>
-              <button onClick={handleNewMonth}
+              <button onClick={openNewMonthModal}
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold transition text-sm">
-                <Plus size={16} /> Yeni Ay Başlat
+                <CalendarDays size={16} /> Yeni Ay Başlat
               </button>
             </div>
           )}
         </div>
 
+        {/* Aidat Güncelleme Formu */}
         {showAidatForm && canEdit && (
           <form onSubmit={handleAidatUpdate} className="bg-white rounded-2xl shadow-sm border border-blue-100 p-6 mb-6">
             <h3 className="font-bold text-slate-800 mb-4">Aidat Takvimi Düzenle</h3>
@@ -116,6 +158,7 @@ const FinancialManagement = ({ isAdmin }) => {
           </form>
         )}
 
+        {/* Özet Kartlar */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
             <div className="flex items-center gap-3 mb-3">
@@ -205,15 +248,85 @@ const FinancialManagement = ({ isAdmin }) => {
 
         {config && (
           <div className="mt-6 bg-blue-50 rounded-2xl p-5 border border-blue-100">
-            <h3 className="font-bold text-slate-800 mb-2">Aidat Bilgileri</h3>
-            <div className="flex gap-6 text-sm">
-              <div><span className="text-slate-500">Dönem:</span> <span className="font-semibold">{config.currentMonth}</span></div>
-              <div><span className="text-slate-500">Son Ödeme:</span> <span className="font-semibold">{config.dueDay}. gün</span></div>
-              <div><span className="text-slate-500">Aidat:</span> <span className="font-semibold">₺{config.amount?.toLocaleString('tr-TR') || 'Giderlerden hesaplanır'}</span></div>
+            <h3 className="font-bold text-slate-800 mb-2">Mevcut Aidat Dönemi</h3>
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div><span className="text-slate-500">Dönem:</span> <span className="font-semibold">{config.currentMonth || '—'}</span></div>
+              <div><span className="text-slate-500">Başlangıç:</span> <span className="font-semibold">{formatDate(config.periodStartDate)}</span></div>
+              <div><span className="text-slate-500">Bitiş:</span> <span className="font-semibold">{formatDate(config.periodEndDate)}</span></div>
+              <div><span className="text-slate-500">Son Ödeme Günü:</span> <span className="font-semibold">{config.dueDay}. gün</span></div>
+              <div><span className="text-slate-500">Aidat:</span> <span className="font-semibold">₺{config.amount?.toLocaleString('tr-TR') || '—'}</span></div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Yeni Ay Modal */}
+      {showNewMonthModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-xl"><CalendarDays size={20} className="text-green-600" /></div>
+                <h2 className="text-lg font-bold text-slate-800">Yeni Aidat Dönemi Başlat</h2>
+              </div>
+              <button onClick={() => setShowNewMonthModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleNewMonth} className="p-6 space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
+                <AlertTriangle size={16} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-amber-700">Bu işlem tüm sakinlerin ödeme durumunu sıfırlar ve otomatik duyuru oluşturur.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Dönem Adı</label>
+                <input
+                  type="text"
+                  required
+                  value={newMonthForm.monthName}
+                  onChange={e => setNewMonthForm({...newMonthForm, monthName: e.target.value})}
+                  placeholder="Örn: Nisan 2026"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Başlangıç Tarihi</label>
+                  <input
+                    type="date"
+                    value={newMonthForm.startDate}
+                    onChange={e => setNewMonthForm({...newMonthForm, startDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Bitiş Tarihi</label>
+                  <input
+                    type="date"
+                    value={newMonthForm.endDate}
+                    onChange={e => setNewMonthForm({...newMonthForm, endDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={saving}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                  {saving ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Başlatılıyor...</> : <><Check size={16} /> Dönemi Başlat</>}
+                </button>
+                <button type="button" onClick={() => setShowNewMonthModal(false)}
+                  className="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm hover:bg-slate-50 font-semibold">
+                  İptal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

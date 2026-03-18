@@ -19,6 +19,10 @@ const Login = () => {
       const user = res.data;
       localStorage.setItem('token', user.token);
       localStorage.setItem('currentUser', JSON.stringify(user));
+      // Eski localStorage verilerini temizle (API öncesi dönemden kalan veriler)
+      ['users','complaints','announcements','paymentHistory','expenses',
+       'generalExpenseItems','copTakibi','oduncRequests','messages',
+       'notifications','aidatConfig','blocks','oduncItems'].forEach(k => localStorage.removeItem(k));
       if (user.role === 'superadmin') navigate('/superadmin');
       else if (user.role === 'admin') navigate('/admin');
       else if (user.role === 'kapici') navigate('/kapici');

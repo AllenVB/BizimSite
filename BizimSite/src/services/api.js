@@ -32,6 +32,7 @@ export const register = (data) => api.post('/auth/register', data);
 
 // USERS
 export const getUsers = () => api.get('/users');
+export const getAdmins = () => api.get('/users/admins');
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/users/${id}`);
 
@@ -69,10 +70,17 @@ export const getBorrowRequests = () => api.get('/borrow');
 export const createBorrowRequest = (data) => api.post('/borrow', data);
 export const respondBorrow = (id, data) => api.post(`/borrow/${id}/respond`, data);
 
+// BLOCKS
+export const getBlocks = () => api.get('/blocks');
+export const createBlock = (data) => api.post('/blocks', data);
+export const updateBlock = (id, data) => api.put(`/blocks/${id}`, data);
+export const deleteBlock = (id) => api.delete(`/blocks/${id}`);
+
 // AIDAT
 export const getAidatConfig = () => api.get('/aidat/config');
 export const updateAidatConfig = (data) => api.put('/aidat/config', data);
-export const startNewMonth = (monthName) => api.post('/aidat/new-month', JSON.stringify(monthName), { headers: { 'Content-Type': 'application/json' } });
+export const startNewMonth = (data) => api.post('/aidat/new-month', data);
+export const rollbackMonth = () => api.post('/aidat/rollback-month');
 
 // SUPERADMIN
 export const getSuperAdminDashboard = () => api.get('/superadmin/dashboard');

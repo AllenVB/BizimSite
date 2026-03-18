@@ -23,13 +23,26 @@ public class UsersController : ControllerBase
         return int.TryParse(tenantClaim, out var id) ? id : 0;
     }
 
+    // Sadece kendi binasının admin kullanıcılarını getir (superadmin hariç)
+    [HttpGet("admins")]
+    [Authorize]
+    public async Task<IActionResult> GetAdmins()
+    {
+        var tenantId = GetTenantId();
+        var admins = await _db.Users
+            .Where(u => u.TenantId == tenantId && u.Role == "admin" && !u.IsSuperAdmin)
+            .Select(u => new UserResponse(u.Id, u.Name, u.Email, u.Phone, u.Block, u.No, u.Role, u.Type, u.Paid, u.LastPayment, u.CreatedAt))
+            .ToListAsync();
+        return Ok(admins);
+    }
+
     [HttpGet]
     [Authorize(Roles = "admin,superadmin")]
     public async Task<IActionResult> GetAll()
     {
         var tenantId = GetTenantId();
         var users = await _db.Users
-            .Where(u => u.TenantId == tenantId && !u.IsMainAdmin)
+            .Where(u => u.TenantId == tenantId && !u.IsMainAdmin && !u.IsSuperAdmin)
             .Select(u => new UserResponse(u.Id, u.Name, u.Email, u.Phone, u.Block, u.No, u.Role, u.Type, u.Paid, u.LastPayment, u.CreatedAt))
             .ToListAsync();
         return Ok(users);

@@ -8,4 +8,13 @@ public class AidatConfig
     public int TenantId { get; set; }
     public Tenant? Tenant { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // Dönem tarihleri
+    public DateTime? PeriodStartDate { get; set; }
+    public DateTime? PeriodEndDate { get; set; }
+
+    // Geri alma için önceki dönem bilgileri
+    public string? PreviousMonth { get; set; }
+    public DateTime? PreviousStartDate { get; set; }
+    public DateTime? PreviousEndDate { get; set; }
 }
