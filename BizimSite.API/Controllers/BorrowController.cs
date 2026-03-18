@@ -1,5 +1,6 @@
 using BizimSite.API.Data;
 using BizimSite.API.DTOs;
+using BizimSite.API.Filters;
 using BizimSite.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ namespace BizimSite.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[PlanRequired("premium")]
 public class BorrowController : ControllerBase
 {
     private readonly AppDbContext _db;

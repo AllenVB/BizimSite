@@ -24,7 +24,7 @@ const AdminLayout = () => (
     <Sidebar isAdmin={true} />
     <div className="flex-1">
       <Routes>
-        <Route path="/" element={<AdminHome />} />
+        <Route index element={<AdminHome />} />
         <Route path="/users" element={<UserManagement />} />
         <Route path="/blocks" element={<BlockManagement />} />
         <Route path="/chat" element={<ChatPanel />} />
@@ -46,7 +46,7 @@ const ResidentLayout = () => (
     <Sidebar isAdmin={false} />
     <div className="flex-1">
       <Routes>
-        <Route path="/" element={<ResidentDashboard />} />
+        <Route index element={<ResidentDashboard />} />
         <Route path="/payments" element={<AidatOde />} />
         <Route path="/payment-history" element={<PaymentHistory />} />
         <Route path="/chat" element={<ChatPanel />} />
@@ -67,7 +67,7 @@ const KapiciLayout = () => (
     <Sidebar isAdmin={false} />
     <div className="flex-1">
       <Routes>
-        <Route path="/" element={<KapiciHome />} />
+        <Route index element={<KapiciHome />} />
         <Route path="/cop" element={<CopTakibi />} />
         <Route path="/announcements" element={<Announcements isAdmin={true} />} />
         <Route path="/complaints" element={<Complaints isAdmin={false} />} />

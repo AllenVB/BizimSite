@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2 } from "lucide-react";
+import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2, Star, Zap, Crown } from "lucide-react";
 import { getSuperAdminDashboard, getTenants, createTenant, updateTenant, deleteTenant, getTenantUsers } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
@@ -117,7 +117,7 @@ const SuperAdminPanel = () => {
 
       {/* Nav Tabs */}
       <div className="bg-white border-b px-6 flex gap-1">
-        {[["dashboard", "Dashboard"], ["tenants", "Binalar"]].map(([key, label]) => (
+        {[["dashboard", "Dashboard"], ["tenants", "Binalar"], ["plans", "Planlar"]].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={"px-4 py-3 text-sm font-medium border-b-2 transition " + (tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800")}>
             {label}
@@ -137,6 +137,8 @@ const SuperAdminPanel = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 size={32} className="animate-spin text-indigo-600" />
           </div>
+        ) : tab === "plans" ? (
+          <PlansTab />
         ) : tab === "dashboard" ? (
           <div>
             <h2 className="text-lg font-bold text-gray-800 mb-4">Genel Bakış</h2>
@@ -322,6 +324,101 @@ const SuperAdminPanel = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+const PLAN_FEATURES = [
+  { label: "Maks. Daire", basic: "50 daire", premium: "150 daire", enterprise: "Sınırsız" },
+  { label: "Aidat Yönetimi", basic: true, premium: true, enterprise: true },
+  { label: "Duyurular", basic: true, premium: true, enterprise: true },
+  { label: "Talepler / Şikayetler", basic: true, premium: true, enterprise: true },
+  { label: "Sohbet Paneli", basic: true, premium: true, enterprise: true },
+  { label: "Çöp Takibi", basic: true, premium: true, enterprise: true },
+  { label: "Mali Yönetim", basic: true, premium: true, enterprise: true },
+  { label: "Ödünç Paneli", basic: false, premium: true, enterprise: true },
+  { label: "Kapıcı Rolü", basic: false, premium: true, enterprise: true },
+  { label: "Raporlar & Grafikler", basic: false, premium: true, enterprise: true },
+  { label: "Özel Domain", basic: false, premium: false, enterprise: true },
+  { label: "Öncelikli Destek", basic: false, premium: false, enterprise: true },
+  { label: "Veri Yedekleme", basic: "30 gün", premium: "90 gün", enterprise: "Sınırsız" },
+];
+
+const PlansTab = () => {
+  const plans = [
+    { key: "basic", label: "Basic", price: "₺299", period: "/ay", icon: Star, color: "gray", highlight: false,
+      desc: "Küçük apartmanlar için temel özellikler" },
+    { key: "premium", label: "Premium", price: "₺599", period: "/ay", icon: Zap, color: "indigo", highlight: true,
+      desc: "Orta-büyük binalar için gelişmiş özellikler" },
+    { key: "enterprise", label: "Enterprise", price: "₺999", period: "/ay", icon: Crown, color: "amber", highlight: false,
+      desc: "Büyük siteler için tüm özellikler" },
+  ];
+
+  const cell = (val) => {
+    if (val === true)  return <Check size={16} className="text-green-500 mx-auto" />;
+    if (val === false) return <X size={16} className="text-gray-300 mx-auto" />;
+    return <span className="text-xs font-semibold text-gray-600">{val}</span>;
+  };
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-gray-800 mb-6">Plan Karşılaştırması</h2>
+
+      {/* Plan Kartları */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {plans.map(({ key, label, price, period, icon: Icon, color, highlight, desc }) => (
+          <div key={key} className={`rounded-xl border-2 p-6 flex flex-col ${
+            highlight
+              ? "border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100"
+              : "border-gray-200 bg-white"
+          }`}>
+            {highlight && (
+              <div className="text-xs font-bold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full w-fit mb-3">
+                ⭐ En Popüler
+              </div>
+            )}
+            <div className={`inline-flex p-2 rounded-lg mb-3 w-fit bg-${color}-100`}>
+              <Icon size={20} className={`text-${color}-600`} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800">{label}</h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4">{desc}</p>
+            <div className="mt-auto">
+              <span className="text-3xl font-extrabold text-gray-900">{price}</span>
+              <span className="text-gray-400 text-sm">{period}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Özellik Tablosu */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="text-left px-5 py-3 text-gray-600 font-semibold w-1/2">Özellik</th>
+              {plans.map(p => (
+                <th key={p.key} className={`text-center px-4 py-3 font-bold ${p.highlight ? "text-indigo-700" : "text-gray-700"}`}>
+                  {p.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {PLAN_FEATURES.map((feat, i) => (
+              <tr key={feat.label} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <td className="px-5 py-3 text-gray-700 font-medium">{feat.label}</td>
+                <td className="px-4 py-3 text-center">{cell(feat.basic)}</td>
+                <td className="px-4 py-3 text-center">{cell(feat.premium)}</td>
+                <td className="px-4 py-3 text-center">{cell(feat.enterprise)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-4 text-xs text-gray-400 text-center">
+        Plan değişikliği için ilgili binanın düzenleme ekranını kullanın.
+      </p>
     </div>
   );
 };

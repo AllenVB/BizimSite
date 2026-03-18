@@ -39,6 +39,14 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "admin,superadmin")]
     public async Task<IActionResult> Update(int id, UpdateUserRequest req)
     {
+        // Kapici rolü atamak Premium plan gerektirir
+        if (req.Role == "kapici" && !_tenant.IsSuperAdmin && !_tenant.HasPlan("premium"))
+            return StatusCode(403, new {
+                message = "Kapıcı rolü Premium plana özeldir. Planınızı yükseltmek için yöneticinizle iletişime geçin.",
+                requiredPlan = "premium",
+                currentPlan = _tenant.PlanType
+            });
+
         var u = await _db.Users.FindAsync(id);
         if (u == null) return NotFound();
         u.Name = req.Name; u.Email = req.Email; u.Phone = req.Phone;
