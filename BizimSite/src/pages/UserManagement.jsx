@@ -5,6 +5,10 @@ import { getUsers, updateUser, deleteUser, register } from '../services/api';
 const inp = "w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400";
 
 const UserManagement = () => {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  const planType = currentUser.planType || 'basic';
+  const isPremium = planType === 'premium' || planType === 'enterprise';
+
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
@@ -95,7 +99,7 @@ const UserManagement = () => {
                 <select className={inp} value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
                   <option value="resident">Sakin</option>
                   <option value="admin">Yönetici</option>
-                  <option value="kapici">Kapıcı</option>
+                  {isPremium && <option value="kapici">Kapıcı</option>}
                 </select></div>
               <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Tip</label>
                 <select className={inp} value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>

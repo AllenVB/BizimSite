@@ -44,7 +44,8 @@ public class AuthController : ControllerBase
             paid = user.Paid,
             tenantId = user.TenantId,
             tenantSlug = user.Tenant?.Slug,
-            tenantName = user.Tenant?.Name
+            tenantName = user.Tenant?.Name,
+            planType = user.Tenant?.PlanType ?? "basic"
         });
     }
 

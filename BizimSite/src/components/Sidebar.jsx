@@ -6,6 +6,8 @@ const Sidebar = ({ isAdmin }) => {
   const location = useLocation();
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const isKapici = currentUser.role === 'kapici';
+  const planType = currentUser.planType || 'basic';
+  const isPremium = planType === 'premium' || planType === 'enterprise';
 
   const adminItems = [
     { icon: <Home size={20} />, text: 'Genel Bakis', path: '/admin' },
@@ -14,11 +16,11 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/admin/finances' },
     { icon: <Megaphone size={20} />, text: 'Duyurular', path: '/admin/announcements' },
     { icon: <AlertTriangle size={20} />, text: 'Talepler', path: '/admin/complaints' },
-    { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/admin/reports' },
+    { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/admin/reports', premium: true },
     { icon: <Shield size={20} />, text: 'Yoneticiler', path: '/admin/admins' },
     { icon: <MessageSquare size={20} />, text: 'Sohbet Paneli', path: '/admin/chat' },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/admin/cop' },
-    { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/admin/odunc' },
+    { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/admin/odunc', premium: true },
   ];
 
   const residentItems = [
@@ -29,9 +31,9 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <AlertTriangle size={20} />, text: 'Taleplerim', path: '/resident/complaints' },
     { icon: <MessageSquare size={20} />, text: 'Sakinler Sohbet', path: '/resident/chat' },
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/resident/finances' },
-    { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/resident/reports' },
+    { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/resident/reports', premium: true },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/resident/cop' },
-    { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/resident/odunc' },
+    { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/resident/odunc', premium: true },
   ];
 
   const kapiciItems = [
@@ -41,7 +43,8 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <AlertTriangle size={20} />, text: 'Talepler', path: '/kapici/complaints' },
   ];
 
-  const menuItems = isKapici ? kapiciItems : isAdmin ? adminItems : residentItems;
+  const allItems = isKapici ? kapiciItems : isAdmin ? adminItems : residentItems;
+  const menuItems = allItems.filter(item => !item.premium || isPremium);
   const basePath = isKapici ? '/kapici' : isAdmin ? '/admin' : '/resident';
 
   return (
