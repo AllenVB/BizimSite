@@ -46,7 +46,7 @@ const Announcements = ({ isAdmin }) => {
           </div>
           {canCreate ? (
             <button onClick={() => setShowForm(!showForm)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition font-semibold">
+              className="btn-primary">
               {showForm ? <X size={18} /> : <Plus size={18} />}
               {showForm ? 'İptal' : 'Yeni Duyuru'}
             </button>
@@ -70,8 +70,8 @@ const Announcements = ({ isAdmin }) => {
                 value={form.content} onChange={e => setForm({...form, content: e.target.value})} required placeholder="Duyuru içeriği..." />
             </div>
             <div className="flex gap-3">
-              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold transition">Yayınla</button>
-              <button type="button" onClick={() => setShowForm(false)} className="border border-slate-200 text-slate-600 px-6 py-2.5 rounded-xl hover:bg-slate-50 transition">İptal</button>
+              <button type="submit" className="btn-primary">Yayınla</button>
+              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">İptal</button>
             </div>
           </form>
         )}
@@ -86,7 +86,7 @@ const Announcements = ({ isAdmin }) => {
         ) : (
           <div className="space-y-4">
             {announcements.map(a => (
-              <div key={a.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+              <div key={a.id} className="card p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -99,7 +99,7 @@ const Announcements = ({ isAdmin }) => {
                     <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{a.content}</p>
                   </div>
                   {currentUser.role === 'admin' && (
-                    <button onClick={() => handleDelete(a.id)} className="text-slate-300 hover:text-red-400 transition flex-shrink-0">
+                    <button onClick={() => handleDelete(a.id)} className="btn-icon text-slate-300 hover:text-red-400 flex-shrink-0">
                       <Trash2 size={18} />
                     </button>
                   )}

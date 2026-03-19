@@ -33,7 +33,7 @@ const ProfileSettings = () => {
                 type="text"
                 value={user.name || ''}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input-field"
               />
             </div>
 
@@ -43,7 +43,7 @@ const ProfileSettings = () => {
                 type="email"
                 value={user.email || ''}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input-field"
               />
             </div>
 
@@ -53,7 +53,7 @@ const ProfileSettings = () => {
                 type="password"
                 value={user.password || ''}
                 onChange={(e) => handleChange('password', e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input-field"
               />
             </div>
 
@@ -63,7 +63,7 @@ const ProfileSettings = () => {
                 type="tel"
                 value={user.phone || ''}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input-field"
               />
             </div>
 
@@ -97,7 +97,7 @@ const ProfileSettings = () => {
             <div className="flex gap-4">
               <button
                 onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-all"
+                className="flex-1 btn-primary justify-center"
               >
                 <Save size={20} />
                 Kaydet

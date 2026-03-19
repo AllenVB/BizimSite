@@ -54,7 +54,7 @@ const Complaints = ({ isAdmin }) => {
           </div>
           {!canManage && (
             <button onClick={() => setShowForm(!showForm)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-semibold transition">
+              className="btn-primary">
               {showForm ? <X size={18} /> : <Plus size={18} />}
               {showForm ? 'İptal' : 'Yeni Talep'}
             </button>
@@ -84,8 +84,8 @@ const Complaints = ({ isAdmin }) => {
               </span>
             </label>
             <div className="flex gap-3">
-              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold transition">Gönder</button>
-              <button type="button" onClick={() => setShowForm(false)} className="border border-slate-200 text-slate-600 px-6 py-2.5 rounded-xl hover:bg-slate-50 transition">İptal</button>
+              <button type="submit" className="btn-primary">Gönder</button>
+              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">İptal</button>
             </div>
           </form>
         )}
@@ -101,9 +101,9 @@ const Complaints = ({ isAdmin }) => {
                   value={adminNote} onChange={e => setAdminNote(e.target.value)} placeholder="Not ekle..." />
               </div>
               <div className="flex gap-2 flex-wrap">
-                <button onClick={() => handleUpdate(selected.id, 'inprogress')} className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold">İşleme Al</button>
-                <button onClick={() => handleUpdate(selected.id, 'resolved')} className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-semibold">Çözüldü</button>
-                <button onClick={() => setSelected(null)} className="border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm">İptal</button>
+                <button onClick={() => handleUpdate(selected.id, 'inprogress')} className="btn-primary text-sm py-2 px-4">İşleme Al</button>
+                <button onClick={() => handleUpdate(selected.id, 'resolved')} className="btn-success text-sm py-2 px-4">Çözüldü</button>
+                <button onClick={() => setSelected(null)} className="btn-secondary text-sm py-2 px-4">İptal</button>
               </div>
             </div>
           </div>
@@ -122,7 +122,7 @@ const Complaints = ({ isAdmin }) => {
               const st = statusConfig[c.status] || statusConfig.pending;
               return (
                 <div key={c.id} onClick={() => canManage && setSelected(c)}
-                  className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-5 ${canManage ? 'cursor-pointer hover:shadow-md' : ''} transition`}>
+                  className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-5 transition-all duration-200 ${canManage ? 'cursor-pointer hover:shadow-lg hover:-translate-y-0.5' : ''}`}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">

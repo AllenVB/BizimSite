@@ -120,16 +120,16 @@ const FinancialManagement = ({ isAdmin }) => {
             <div className="flex gap-3">
               {config?.previousMonth && (
                 <button onClick={handleRollback}
-                  className="border border-orange-300 text-orange-600 px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold hover:bg-orange-50 transition text-sm">
+                  className="border border-orange-300 text-orange-600 px-4 py-2.5 rounded-xl inline-flex items-center gap-2 font-semibold hover:bg-orange-50 active:scale-95 transition-all duration-150 text-sm">
                   <RotateCcw size={16} /> Geri Al ({config.previousMonth})
                 </button>
               )}
               <button onClick={() => setShowAidatForm(!showAidatForm)}
-                className="border border-blue-200 text-blue-600 px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold hover:bg-blue-50 transition text-sm">
+                className="btn-outline-blue text-sm">
                 <Edit2 size={16} /> Aidat Takvimi
               </button>
               <button onClick={openNewMonthModal}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold transition text-sm">
+                className="btn-success text-sm">
                 <CalendarDays size={16} /> Yeni Ay Başlat
               </button>
             </div>
@@ -152,24 +152,24 @@ const FinancialManagement = ({ isAdmin }) => {
                   value={aidatForm.amount} onChange={e => setAidatForm({...aidatForm, amount: e.target.value})} /></div>
             </div>
             <div className="flex gap-3 mt-4">
-              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><Check size={16} /> Kaydet</button>
-              <button type="button" onClick={() => setShowAidatForm(false)} className="border border-slate-200 text-slate-600 px-5 py-2 rounded-xl text-sm hover:bg-slate-50"><X size={16} /></button>
+              <button type="submit" className="btn-primary text-sm py-2 px-5"><Check size={16} /> Kaydet</button>
+              <button type="button" onClick={() => setShowAidatForm(false)} className="btn-secondary text-sm py-2 px-5"><X size={16} /></button>
             </div>
           </form>
         )}
 
         {/* Özet Kartlar */}
         <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+          <div className="stat-card">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-green-50 rounded-xl"><TrendingUp size={20} className="text-green-500" /></div>
+              <div className="p-2.5 bg-green-50 rounded-xl group-hover:scale-110 transition-transform duration-200"><TrendingUp size={20} className="text-green-500" /></div>
               <span className="text-sm text-slate-500">Toplam Gelir</span>
             </div>
             <p className="text-2xl font-bold text-green-600">₺{totalIncome.toLocaleString('tr-TR')}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+          <div className="stat-card">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-red-50 rounded-xl"><TrendingDown size={20} className="text-red-500" /></div>
+              <div className="p-2.5 bg-red-50 rounded-xl group-hover:scale-110 transition-transform duration-200"><TrendingDown size={20} className="text-red-500" /></div>
               <span className="text-sm text-slate-500">Toplam Gider</span>
             </div>
             <p className="text-2xl font-bold text-red-500">₺{totalExpenses.toLocaleString('tr-TR')}</p>
@@ -206,8 +206,8 @@ const FinancialManagement = ({ isAdmin }) => {
                 <input type="number" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400"
                   value={expForm.amount} onChange={e => setExpForm({...expForm, amount: e.target.value})} required placeholder="Tutar (₺)" />
                 <div className="flex gap-2">
-                  <button type="submit" className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold">Ekle</button>
-                  <button type="button" onClick={() => setShowExpenseForm(false)} className="border border-slate-200 text-slate-600 px-4 py-1.5 rounded-lg text-sm">İptal</button>
+                  <button type="submit" className="btn-primary text-sm py-1.5 px-4">Ekle</button>
+                  <button type="button" onClick={() => setShowExpenseForm(false)} className="btn-secondary text-sm py-1.5 px-4">İptal</button>
                 </div>
               </form>
             )}
@@ -315,11 +315,11 @@ const FinancialManagement = ({ isAdmin }) => {
 
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving}
-                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                  className="flex-1 btn-success text-sm justify-center disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
                   {saving ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Başlatılıyor...</> : <><Check size={16} /> Dönemi Başlat</>}
                 </button>
                 <button type="button" onClick={() => setShowNewMonthModal(false)}
-                  className="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm hover:bg-slate-50 font-semibold">
+                  className="btn-secondary text-sm px-5">
                   İptal
                 </button>
               </div>

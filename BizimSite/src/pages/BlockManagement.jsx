@@ -83,7 +83,7 @@ const BlockManagement = () => {
         </div>
         <button
           onClick={() => { setShowForm(!showForm); setEditingId(null); setFormData({ name: '', floors: '', apartmentsPerFloor: '' }); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold transition-all shadow-lg"
+          className="btn-primary shadow-lg"
         >
           {showForm ? <X size={20} /> : <Plus size={20} />}
           {showForm ? 'İptal' : 'Yeni Blok'}
@@ -92,23 +92,23 @@ const BlockManagement = () => {
 
       {/* Özet Kartlar */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="p-2 bg-blue-50 rounded-lg w-fit mb-2"><Building2 size={20} className="text-blue-600" /></div>
+        <div className="stat-card">
+          <div className="p-2 bg-blue-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Building2 size={20} className="text-blue-600" /></div>
           <p className="text-xs text-gray-500">Toplam Blok</p>
           <p className="text-2xl font-bold text-gray-800">{blocks.length}</p>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="p-2 bg-green-50 rounded-lg w-fit mb-2"><Home size={20} className="text-green-600" /></div>
+        <div className="stat-card">
+          <div className="p-2 bg-green-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Home size={20} className="text-green-600" /></div>
           <p className="text-xs text-gray-500">Toplam Daire</p>
           <p className="text-2xl font-bold text-gray-800">{totalApartments}</p>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="p-2 bg-purple-50 rounded-lg w-fit mb-2"><Users size={20} className="text-purple-600" /></div>
+        <div className="stat-card">
+          <div className="p-2 bg-purple-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Users size={20} className="text-purple-600" /></div>
           <p className="text-xs text-gray-500">Kayıtlı Sakin</p>
           <p className="text-2xl font-bold text-gray-800">{occupiedCount}</p>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="p-2 bg-orange-50 rounded-lg w-fit mb-2"><Home size={20} className="text-orange-600" /></div>
+        <div className="stat-card">
+          <div className="p-2 bg-orange-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Home size={20} className="text-orange-600" /></div>
           <p className="text-xs text-gray-500">Boş Daire</p>
           <p className="text-2xl font-bold text-gray-800">{Math.max(0, totalApartments - occupiedCount)}</p>
         </div>
@@ -156,12 +156,12 @@ const BlockManagement = () => {
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <button type="submit" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all">
+            <button type="submit" className="btn-primary">
               <Save size={18} /> {editingId ? 'Güncelle' : 'Ekle'}
             </button>
             {editingId && (
               <button type="button" onClick={() => { setEditingId(null); setFormData({ name: '', floors: '', apartmentsPerFloor: '' }); }}
-                className="bg-slate-200 text-slate-600 px-6 py-3 rounded-lg font-semibold hover:bg-slate-300 transition-all">
+                className="btn-secondary">
                 İptal
               </button>
             )}
@@ -181,7 +181,7 @@ const BlockManagement = () => {
           blocks.map((block) => {
             const blockResidents = users.filter(u => u.block === block.name);
             return (
-              <div key={block.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all">
+              <div key={block.id} className="card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -195,10 +195,10 @@ const BlockManagement = () => {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => startEdit(block)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
+                    <button onClick={() => startEdit(block)} className="btn-icon text-blue-500">
                       <Edit2 size={16} />
                     </button>
-                    <button onClick={() => handleDelete(block.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                    <button onClick={() => handleDelete(block.id)} className="btn-icon text-red-500">
                       <Trash2 size={16} />
                     </button>
                   </div>

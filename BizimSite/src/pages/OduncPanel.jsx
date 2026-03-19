@@ -74,7 +74,7 @@ const OduncPanel = () => {
             <p className="text-slate-500 mt-1">Komşulardan ödünç alın veya verin · {openCount} açık istek</p>
           </div>
           <button onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-3 rounded-xl font-semibold transition shadow-lg">
+            className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white px-5 py-3 rounded-xl font-semibold transition-all duration-150 shadow-lg inline-flex items-center gap-2">
             {showForm ? <X size={20} /> : <Plus size={20} />}
             {showForm ? 'İptal' : 'İstek Oluştur'}
           </button>
@@ -115,7 +115,7 @@ const OduncPanel = () => {
                 </select>
               </div>
               <button type="submit" disabled={submitting}
-                className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                className="w-full bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:bg-amber-300 text-white py-3 rounded-xl font-bold transition-all duration-150 flex items-center justify-center gap-2">
                 {submitting && <Loader2 size={16} className="animate-spin" />}
                 İsteği Yayınla
               </button>

@@ -87,7 +87,7 @@ const ChatPanel = () => {
           <div className="w-72 bg-white border-l border-slate-200 flex flex-col">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-slate-800 flex items-center gap-2"><Users size={16} /> Sakinler</h3>
-              <button onClick={() => setShowResidents(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+              <button onClick={() => setShowResidents(false)} className="btn-icon"><X size={18} /></button>
             </div>
             <div className="overflow-y-auto flex-1">
               {residents.map(r => (
@@ -110,9 +110,9 @@ const ChatPanel = () => {
 
       <form onSubmit={handleSend} className="bg-white border-t border-slate-200 p-4 flex gap-3">
         <input value={text} onChange={e => setText(e.target.value)} placeholder="Mesajınızı yazın..."
-          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-2xl outline-none focus:border-blue-400 transition text-sm" />
+          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-2xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-150 text-sm" />
         <button type="submit" disabled={!text.trim()}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-3 rounded-2xl transition">
+          className="bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:bg-slate-200 text-white p-3 rounded-2xl transition-all duration-150">
           <Send size={18} />
         </button>
       </form>

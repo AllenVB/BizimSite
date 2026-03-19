@@ -121,7 +121,7 @@ const AidatOde = () => {
               </div>
             )}
 
-            <button onClick={() => setStep(2)} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg">
+            <button onClick={() => setStep(2)} className="w-full btn-primary justify-center py-4 rounded-2xl text-lg shadow-lg">
               <CreditCard size={22} /> Ödemeye Geç <ChevronRight size={20} />
             </button>
           </div>
@@ -178,8 +178,8 @@ const AidatOde = () => {
                 <span className="text-2xl font-bold text-blue-600">₺{monthlyAidat.toLocaleString('tr-TR')}</span>
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-2xl border-2 border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition">Geri</button>
-                <button type="submit" disabled={loading} className="flex-grow bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition">
+                <button type="button" onClick={() => setStep(1)} className="flex-1 btn-secondary justify-center py-3.5 rounded-2xl">Geri</button>
+                <button type="submit" disabled={loading} className="flex-grow btn-success justify-center py-3.5 rounded-2xl disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
                   {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> İşleniyor...</> : <><Shield size={18} /> Güvenli Öde</>}
                 </button>
               </div>

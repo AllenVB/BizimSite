@@ -74,7 +74,7 @@ const PaymentHistory = () => {
           ) : (
             <div className="divide-y divide-slate-50">
               {filtered.map((p) => (
-                <div key={p.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition">
+                <div key={p.id} className="flex items-center gap-4 px-6 py-4 hover:bg-blue-50/50 transition-colors duration-100">
                   <div className="p-3 bg-green-50 rounded-xl flex-shrink-0">
                     <CreditCard size={18} className="text-green-500" />
                   </div>

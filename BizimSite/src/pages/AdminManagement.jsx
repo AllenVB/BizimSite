@@ -38,7 +38,7 @@ const AdminManagement = () => {
               <p className="text-slate-400">Henüz yönetici bilgisi yok</p>
             </div>
           ) : admins.map((admin, i) => (
-            <div key={admin.id || i} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-5">
+            <div key={admin.id || i} className="card p-6 flex items-center gap-5">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg flex-shrink-0 ${admin.isMainAdmin ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
                 {getInitials(admin.name)}
               </div>

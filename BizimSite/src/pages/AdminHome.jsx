@@ -59,43 +59,43 @@ const AdminHome = () => {
         <>
           {/* Üst Kartlar */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="stat-card">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-blue-50 rounded-lg"><Wallet size={20} className="text-blue-600" /></div>
+                <div className="p-2 bg-blue-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><Wallet size={20} className="text-blue-600" /></div>
                 <ArrowUpRight size={16} className="text-green-500" />
               </div>
               <p className="text-xs text-gray-500 font-medium">Toplam Tahsilat</p>
               <h3 className="text-xl font-bold text-gray-800">₺{totalCollection.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="stat-card">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-green-50 rounded-lg"><TrendingUp size={20} className="text-green-600" /></div>
+                <div className="p-2 bg-green-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><TrendingUp size={20} className="text-green-600" /></div>
                 <ArrowUpRight size={16} className="text-green-500" />
               </div>
               <p className="text-xs text-gray-500 font-medium">Ödeme Yapan</p>
               <h3 className="text-xl font-bold text-gray-800">{paidCount} / {payments.length}</h3>
             </div>
 
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="stat-card">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-red-50 rounded-lg"><AlertCircle size={20} className="text-red-600" /></div>
+                <div className="p-2 bg-red-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><AlertCircle size={20} className="text-red-600" /></div>
                 <ArrowDownRight size={16} className="text-red-500" />
               </div>
               <p className="text-xs text-gray-500 font-medium">Toplam Borç</p>
               <h3 className="text-xl font-bold text-gray-800">₺{totalDebt.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="stat-card">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-orange-50 rounded-lg"><TrendingDown size={20} className="text-orange-600" /></div>
+                <div className="p-2 bg-orange-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><TrendingDown size={20} className="text-orange-600" /></div>
                 <ArrowDownRight size={16} className="text-orange-500" />
               </div>
               <p className="text-xs text-gray-500 font-medium">Toplam Gider</p>
               <h3 className="text-xl font-bold text-gray-800">₺{totalExpense.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className={`p-5 rounded-xl shadow-sm border ${netBalance >= 0 ? 'bg-emerald-600 border-emerald-700' : 'bg-red-600 border-red-700'}`}>
+            <div className={`p-5 rounded-2xl shadow-sm border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${netBalance >= 0 ? 'bg-emerald-600 border-emerald-700' : 'bg-red-600 border-red-700'}`}>
               <p className="text-xs text-white/80 font-medium mb-1">NET BAKİYE</p>
               <h3 className="text-2xl font-bold text-white">₺{netBalance.toLocaleString('tr-TR')}</h3>
               <p className="text-xs text-white/60 mt-1">Tahsilat — Gider</p>

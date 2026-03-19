@@ -110,7 +110,7 @@ const SuperAdminPanel = () => {
             <p className="text-indigo-200 text-xs">Tüm binaları yönet</p>
           </div>
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition">
+        <button onClick={handleLogout} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:scale-95 px-4 py-2 rounded-lg text-sm transition-all duration-150">
           <LogOut size={16} /> Çıkış
         </button>
       </div>
@@ -149,8 +149,8 @@ const SuperAdminPanel = () => {
                 { label: "Toplam Kullanıcı", value: dashboard?.totalUsers ?? 0, icon: Users, color: "blue" },
                 { label: "Toplam Gelir", value: (dashboard?.totalRevenue ?? 0).toLocaleString("tr-TR") + " ₺", icon: TrendingUp, color: "amber" },
               ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-                  <div className={"inline-flex p-2 rounded-lg mb-3 bg-" + color + "-50"}>
+                <div key={label} className="stat-card">
+                  <div className={"inline-flex p-2 rounded-lg mb-3 bg-" + color + "-50 group-hover:scale-110 transition-transform duration-200"}>
                     <Icon size={20} className={"text-" + color + "-600"} />
                   </div>
                   <p className="text-2xl font-bold text-gray-800">{value}</p>
@@ -177,7 +177,7 @@ const SuperAdminPanel = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-800">Binalar ({tenants.length})</h2>
               <button onClick={() => setShowForm(!showForm)}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                className="btn-primary bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200">
                 <Plus size={16} /> Yeni Bina
               </button>
             </div>
@@ -189,23 +189,23 @@ const SuperAdminPanel = () => {
                 <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Bina Adı *</label>
-                    <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Güneş Apartmanı" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                    <input required className="input-field" placeholder="Güneş Apartmanı" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Slug (URL kısmı) *</label>
-                    <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="gunesapt" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s/g,"")})} />
+                    <input required className="input-field" placeholder="gunesapt" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s/g,"")})} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Adres</label>
-                    <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="İstanbul, Kadıköy..." value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                    <input className="input-field" placeholder="İstanbul, Kadıköy..." value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Telefon</label>
-                    <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="0212 000 00 00" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                    <input className="input-field" placeholder="0212 000 00 00" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Plan</label>
-                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" value={formData.planType} onChange={e => setFormData({...formData, planType: e.target.value})}>
+                    <select className="input-field" value={formData.planType} onChange={e => setFormData({...formData, planType: e.target.value})}>
                       <option value="basic">Basic</option>
                       <option value="premium">Premium</option>
                       <option value="enterprise">Enterprise</option>
@@ -213,19 +213,19 @@ const SuperAdminPanel = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Admin Adı *</label>
-                    <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Ahmet Yılmaz" value={formData.adminName} onChange={e => setFormData({...formData, adminName: e.target.value})} />
+                    <input required className="input-field" placeholder="Ahmet Yılmaz" value={formData.adminName} onChange={e => setFormData({...formData, adminName: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Admin E-posta *</label>
-                    <input required type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="admin@gunesapt.com" value={formData.adminEmail} onChange={e => setFormData({...formData, adminEmail: e.target.value})} />
+                    <input required type="email" className="input-field" placeholder="admin@gunesapt.com" value={formData.adminEmail} onChange={e => setFormData({...formData, adminEmail: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Admin Şifre *</label>
-                    <input required type="password" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="••••••••" value={formData.adminPassword} onChange={e => setFormData({...formData, adminPassword: e.target.value})} />
+                    <input required type="password" className="input-field" placeholder="••••••••" value={formData.adminPassword} onChange={e => setFormData({...formData, adminPassword: e.target.value})} />
                   </div>
                   <div className="md:col-span-2 flex justify-end gap-3">
-                    <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">İptal</button>
-                    <button type="submit" className="px-6 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Oluştur</button>
+                    <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">İptal</button>
+                    <button type="submit" className="btn-primary bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200">Oluştur</button>
                   </div>
                 </form>
               </div>
@@ -239,7 +239,7 @@ const SuperAdminPanel = () => {
                   <form onSubmit={handleEdit} className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Plan</label>
-                      <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={editData.planType} onChange={e => setEditData({...editData, planType: e.target.value})}>
+                      <select className="select-field" value={editData.planType} onChange={e => setEditData({...editData, planType: e.target.value})}>
                         <option value="basic">Basic</option>
                         <option value="premium">Premium</option>
                         <option value="enterprise">Enterprise</option>
@@ -247,7 +247,7 @@ const SuperAdminPanel = () => {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Bitiş Tarihi (opsiyonel)</label>
-                      <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={editData.expiresAt} onChange={e => setEditData({...editData, expiresAt: e.target.value})} />
+                      <input type="date" className="input-field" value={editData.expiresAt} onChange={e => setEditData({...editData, expiresAt: e.target.value})} />
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-gray-700">Durum:</span>
@@ -256,8 +256,8 @@ const SuperAdminPanel = () => {
                       </button>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                      <button type="button" onClick={() => setEditTenant(null)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
-                      <button type="submit" className="px-6 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg">Kaydet</button>
+                      <button type="button" onClick={() => setEditTenant(null)} className="btn-secondary">İptal</button>
+                      <button type="submit" className="btn-primary bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200">Kaydet</button>
                     </div>
                   </form>
                 </div>
@@ -273,7 +273,7 @@ const SuperAdminPanel = () => {
                 </div>
               )}
               {tenants.map(t => (
-                <div key={t.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div key={t.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
                   <div className="p-4 flex items-center gap-4">
                     <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Building2 size={20} className="text-indigo-600" />
@@ -287,16 +287,16 @@ const SuperAdminPanel = () => {
                       <p className="text-xs text-gray-400 mt-0.5">{t.slug}.bizimsite.com · {t.userCount ?? 0} kullanıcı{t.address ? " · " + t.address : ""}</p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={() => handleExpandTenant(t.id)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition" title="Kullanıcıları gör">
+                      <button onClick={() => handleExpandTenant(t.id)} className="btn-icon" title="Kullanıcıları gör">
                         {expandedTenant === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
-                      <button onClick={() => { setEditTenant(t); setEditData({ planType: t.planType, isActive: t.isActive, expiresAt: t.expiresAt ? t.expiresAt.substring(0,10) : "" }); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Düzenle">
+                      <button onClick={() => { setEditTenant(t); setEditData({ planType: t.planType, isActive: t.isActive, expiresAt: t.expiresAt ? t.expiresAt.substring(0,10) : "" }); }} className="btn-icon hover:text-blue-600 hover:bg-blue-50" title="Düzenle">
                         <Edit2 size={16} />
                       </button>
                       <button onClick={() => handleToggleActive(t)} className={"p-2 rounded-lg transition " + (t.isActive ? "text-green-500 hover:bg-green-50" : "text-red-400 hover:bg-red-50")} title={t.isActive ? "Pasife al" : "Aktife al"}>
                         {t.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                       </button>
-                      <button onClick={() => handleDelete(t.id, t.name)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Sil">
+                      <button onClick={() => handleDelete(t.id, t.name)} className="btn-icon hover:text-red-600 hover:bg-red-50" title="Sil">
                         <Trash2 size={16} />
                       </button>
                     </div>

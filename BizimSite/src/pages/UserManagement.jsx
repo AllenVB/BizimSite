@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Search, Edit2, Trash2, X, Check } from 'lucide-react';
 import { getUsers, updateUser, deleteUser, register } from '../services/api';
 
-const inp = "w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400";
+const inp = "input-field";
 
 const UserManagement = () => {
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
@@ -73,7 +73,7 @@ const UserManagement = () => {
             <p className="text-slate-500 mt-1">{users.length} kayıtlı kullanıcı</p>
           </div>
           <button onClick={() => { setShowForm(!showForm); setEditingId(null); setFormData({ name:'', email:'', password:'', phone:'', block:'', no:'', role:'resident', type:'Kiracı' }); }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-semibold transition">
+            className="btn-primary">
             {showForm && !editingId ? <X size={18} /> : <UserPlus size={18} />}
             {showForm && !editingId ? 'İptal' : 'Yeni Kullanıcı'}
           </button>
@@ -107,10 +107,10 @@ const UserManagement = () => {
                   <option value="Ev Sahibi">Ev Sahibi</option>
                 </select></div>
               <div className="col-span-2 md:col-span-3 flex gap-3 pt-1">
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold transition flex items-center gap-2">
+                <button type="submit" className="btn-primary">
                   <Check size={16} /> {editingId ? 'Güncelle' : 'Ekle'}
                 </button>
-                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="border border-slate-200 text-slate-600 px-6 py-2.5 rounded-xl hover:bg-slate-50">İptal</button>
+                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="btn-secondary">İptal</button>
               </div>
             </form>
           </div>
@@ -144,7 +144,7 @@ const UserManagement = () => {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filtered.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50 transition">
+                  <tr key={u.id} className="table-row">
                     <td className="px-5 py-3">
                       <p className="font-semibold text-slate-800 text-sm">{u.name}</p>
                       <p className="text-xs text-slate-400">{u.email}</p>
@@ -163,8 +163,8 @@ const UserManagement = () => {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex gap-2">
-                        <button onClick={() => handleEdit(u)} className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 transition"><Edit2 size={15} /></button>
-                        <button onClick={() => handleDelete(u.id)} className="p-1.5 hover:bg-red-50 rounded-lg text-red-400 transition"><Trash2 size={15} /></button>
+                        <button onClick={() => handleEdit(u)} className="btn-icon text-blue-500"><Edit2 size={15} /></button>
+                        <button onClick={() => handleDelete(u.id)} className="btn-icon text-red-400"><Trash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>

@@ -54,9 +54,9 @@ const ResidentDashboard = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Aidat */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="stat-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-red-50 text-red-600 rounded-xl"><Wallet size={24} /></div>
+                <div className="p-3 bg-red-50 text-red-600 rounded-xl group-hover:scale-110 transition-transform duration-200"><Wallet size={24} /></div>
                 <span className={`text-xs font-bold px-2 py-1 rounded-md ${isPaid ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
                   {isPaid ? 'Ödendi' : 'Borçlu'}
                 </span>
@@ -65,15 +65,15 @@ const ResidentDashboard = () => {
               <p className="text-2xl font-bold text-slate-800">{monthlyAidat > 0 ? `₺${monthlyAidat.toLocaleString('tr-TR')}` : '₺0'}</p>
               {!isPaid && monthlyAidat > 0 && (
                 <button onClick={() => navigate('/resident/payments')}
-                  className="mt-4 w-full bg-slate-900 text-white py-2 rounded-lg font-semibold hover:bg-slate-800 transition-all text-sm">
+                  className="mt-4 w-full btn-primary justify-center text-sm py-2">
                   Hemen Öde
                 </button>
               )}
             </div>
 
             {/* Son ödeme */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <div className="p-3 bg-green-50 text-green-600 rounded-xl w-fit mb-4"><CreditCard size={24} /></div>
+            <div className="stat-card p-6">
+              <div className="p-3 bg-green-50 text-green-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform duration-200"><CreditCard size={24} /></div>
               <h3 className="text-slate-500 text-sm font-medium">Son Ödeme Tarihi</h3>
               <p className="text-xl font-bold text-slate-800">
                 {myPayment?.paidAt ? new Date(myPayment.paidAt).toLocaleDateString('tr-TR') : '-'}
@@ -81,16 +81,16 @@ const ResidentDashboard = () => {
             </div>
 
             {/* Telefon */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl w-fit mb-4"><User size={24} /></div>
+            <div className="stat-card p-6">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform duration-200"><User size={24} /></div>
               <h3 className="text-slate-500 text-sm font-medium">Kayıtlı Telefon</h3>
               <p className="text-xl font-bold text-slate-800">{currentUser.phone || '-'}</p>
             </div>
 
             {/* Talepler */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="stat-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl"><AlertTriangle size={24} /></div>
+                <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl group-hover:scale-110 transition-transform duration-200"><AlertTriangle size={24} /></div>
                 {pendingComplaints > 0 && (
                   <span className="text-xs font-bold px-2 py-1 rounded-md bg-yellow-50 text-yellow-600">{pendingComplaints} aktif</span>
                 )}
@@ -98,7 +98,7 @@ const ResidentDashboard = () => {
               <h3 className="text-slate-500 text-sm font-medium">Taleplerim</h3>
               <p className="text-2xl font-bold text-slate-800">{myComplaints.length}</p>
               <button onClick={() => navigate('/resident/complaints')}
-                className="mt-4 w-full bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-all text-sm">
+                className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-white py-2 rounded-xl font-semibold transition-all duration-150 text-sm">
                 Talep Oluştur
               </button>
             </div>

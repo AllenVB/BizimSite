@@ -262,8 +262,8 @@ ${expenseData.length > 0 ? `
                 { label: 'Net Bakiye', value: `${netBalance >= 0 ? '+' : ''}₺${netBalance.toLocaleString('tr-TR')}`, icon: <CreditCard size={18} />, c: netBalance >= 0 ? 'text-emerald-500' : 'text-red-500', bg: netBalance >= 0 ? 'bg-emerald-50' : 'bg-red-50' },
                 { label: 'Toplam Sakin', value: users.length, icon: <Users size={18} />, c: 'text-blue-500', bg: 'bg-blue-50' },
               ].map((c, i) => (
-                <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-                  <div className={`p-2 rounded-lg w-fit mb-3 ${c.bg} ${c.c}`}>{c.icon}</div>
+                <div key={i} className="stat-card">
+                  <div className={`p-2 rounded-lg w-fit mb-3 ${c.bg} ${c.c} group-hover:scale-110 transition-transform duration-200`}>{c.icon}</div>
                   <p className="text-xs text-slate-500">{c.label}</p>
                   <p className="text-xl font-bold text-slate-800 mt-0.5">{c.value}</p>
                 </div>
@@ -384,8 +384,7 @@ ${expenseData.length > 0 ? `
                   <p className="text-xs text-blue-600 mt-1">Tahsilat Oranı</p>
                 </div>
               </div>
-              <button onClick={generatePDF}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold transition shadow-sm flex-shrink-0">
+              <button onClick={generatePDF} className="btn-primary flex-shrink-0">
                 <Printer size={18} /> PDF Oluştur
               </button>
             </div>

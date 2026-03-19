@@ -63,8 +63,8 @@ const Sidebar = ({ isAdmin }) => {
             (item.path !== basePath && location.pathname.startsWith(item.path));
           return (
             <Link key={i} to={item.path}
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>
-              {item.icon}
+              className={`nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'}`}>
+              <span className={`transition-transform duration-150 ${isActive ? '' : 'group-hover:scale-110'}`}>{item.icon}</span>
               <span className="text-sm font-medium">{item.text}</span>
             </Link>
           );
@@ -72,7 +72,7 @@ const Sidebar = ({ isAdmin }) => {
       </nav>
       <div className="mt-auto border-t border-slate-800 p-4">
         <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-all cursor-pointer group mb-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700 text-sm">
+          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700 text-sm ring-2 ring-blue-400/20 hover:ring-blue-400/50 transition-all duration-200">
             {currentUser.name?.substring(0,2).toUpperCase() || 'KP'}
           </div>
           <div className="flex-1 overflow-hidden">
@@ -88,7 +88,7 @@ const Sidebar = ({ isAdmin }) => {
           )}
         </div>
         <button onClick={() => { localStorage.removeItem('currentUser'); localStorage.removeItem('token'); navigate('/login'); }}
-          className="w-full flex items-center gap-2 text-sm text-red-400 hover:text-red-300 p-2 transition-colors">
+          className="w-full flex items-center gap-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 active:scale-95 p-2 rounded-lg transition-all duration-150">
           <LogOut size={16} /> Cikis Yap
         </button>
       </div>
