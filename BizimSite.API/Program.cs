@@ -38,6 +38,30 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    // SuperAdmin seed — her zaman sabit e-posta/şifre
+    const string superEmail = "superadmin@bizimsite.com";
+    const string superPassword = "BizimSite2026!";
+    var existing = db.Users.FirstOrDefault(u => u.IsSuperAdmin);
+    if (existing == null)
+    {
+        db.Users.Add(new BizimSite.API.Models.User
+        {
+            Name = "Süper Yönetici",
+            Email = superEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(superPassword),
+            Role = "superadmin",
+            IsSuperAdmin = true
+        });
+        db.SaveChanges();
+    }
+    else
+    {
+        // E-posta veya şifre değişmişse sıfırla
+        existing.Email = superEmail;
+        existing.PasswordHash = BCrypt.Net.BCrypt.HashPassword(superPassword);
+        db.SaveChanges();
+    }
 }
 
 app.UseCors();
