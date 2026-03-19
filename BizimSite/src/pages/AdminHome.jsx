@@ -59,7 +59,7 @@ const AdminHome = () => {
         <>
           {/* Üst Kartlar */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="stat-card">
+            <div className="stat-card group">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-blue-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><Wallet size={20} className="text-blue-600" /></div>
                 <ArrowUpRight size={16} className="text-green-500" />
@@ -68,7 +68,7 @@ const AdminHome = () => {
               <h3 className="text-xl font-bold text-gray-800">₺{totalCollection.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className="stat-card">
+            <div className="stat-card group">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-green-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><TrendingUp size={20} className="text-green-600" /></div>
                 <ArrowUpRight size={16} className="text-green-500" />
@@ -77,7 +77,7 @@ const AdminHome = () => {
               <h3 className="text-xl font-bold text-gray-800">{paidCount} / {payments.length}</h3>
             </div>
 
-            <div className="stat-card">
+            <div className="stat-card group">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-red-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><AlertCircle size={20} className="text-red-600" /></div>
                 <ArrowDownRight size={16} className="text-red-500" />
@@ -86,7 +86,7 @@ const AdminHome = () => {
               <h3 className="text-xl font-bold text-gray-800">₺{totalDebt.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className="stat-card">
+            <div className="stat-card group">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-orange-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><TrendingDown size={20} className="text-orange-600" /></div>
                 <ArrowDownRight size={16} className="text-orange-500" />

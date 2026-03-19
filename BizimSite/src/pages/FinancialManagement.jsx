@@ -160,14 +160,14 @@ const FinancialManagement = ({ isAdmin }) => {
 
         {/* Özet Kartlar */}
         <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="stat-card">
+          <div className="stat-card group">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2.5 bg-green-50 rounded-xl group-hover:scale-110 transition-transform duration-200"><TrendingUp size={20} className="text-green-500" /></div>
               <span className="text-sm text-slate-500">Toplam Gelir</span>
             </div>
             <p className="text-2xl font-bold text-green-600">₺{totalIncome.toLocaleString('tr-TR')}</p>
           </div>
-          <div className="stat-card">
+          <div className="stat-card group">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2.5 bg-red-50 rounded-xl group-hover:scale-110 transition-transform duration-200"><TrendingDown size={20} className="text-red-500" /></div>
               <span className="text-sm text-slate-500">Toplam Gider</span>

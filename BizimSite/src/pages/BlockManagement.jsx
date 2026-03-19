@@ -92,22 +92,22 @@ const BlockManagement = () => {
 
       {/* Özet Kartlar */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="stat-card">
+        <div className="stat-card group">
           <div className="p-2 bg-blue-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Building2 size={20} className="text-blue-600" /></div>
           <p className="text-xs text-gray-500">Toplam Blok</p>
           <p className="text-2xl font-bold text-gray-800">{blocks.length}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card group">
           <div className="p-2 bg-green-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Home size={20} className="text-green-600" /></div>
           <p className="text-xs text-gray-500">Toplam Daire</p>
           <p className="text-2xl font-bold text-gray-800">{totalApartments}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card group">
           <div className="p-2 bg-purple-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Users size={20} className="text-purple-600" /></div>
           <p className="text-xs text-gray-500">Kayıtlı Sakin</p>
           <p className="text-2xl font-bold text-gray-800">{occupiedCount}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card group">
           <div className="p-2 bg-orange-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Home size={20} className="text-orange-600" /></div>
           <p className="text-xs text-gray-500">Boş Daire</p>
           <p className="text-2xl font-bold text-gray-800">{Math.max(0, totalApartments - occupiedCount)}</p>

@@ -262,7 +262,7 @@ ${expenseData.length > 0 ? `
                 { label: 'Net Bakiye', value: `${netBalance >= 0 ? '+' : ''}₺${netBalance.toLocaleString('tr-TR')}`, icon: <CreditCard size={18} />, c: netBalance >= 0 ? 'text-emerald-500' : 'text-red-500', bg: netBalance >= 0 ? 'bg-emerald-50' : 'bg-red-50' },
                 { label: 'Toplam Sakin', value: users.length, icon: <Users size={18} />, c: 'text-blue-500', bg: 'bg-blue-50' },
               ].map((c, i) => (
-                <div key={i} className="stat-card">
+                <div key={i} className="stat-card group">
                   <div className={`p-2 rounded-lg w-fit mb-3 ${c.bg} ${c.c} group-hover:scale-110 transition-transform duration-200`}>{c.icon}</div>
                   <p className="text-xs text-slate-500">{c.label}</p>
                   <p className="text-xl font-bold text-slate-800 mt-0.5">{c.value}</p>

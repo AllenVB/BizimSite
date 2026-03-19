@@ -54,7 +54,7 @@ const ResidentDashboard = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Aidat */}
-            <div className="stat-card p-6">
+            <div className="stat-card group p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-red-50 text-red-600 rounded-xl group-hover:scale-110 transition-transform duration-200"><Wallet size={24} /></div>
                 <span className={`text-xs font-bold px-2 py-1 rounded-md ${isPaid ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
@@ -72,7 +72,7 @@ const ResidentDashboard = () => {
             </div>
 
             {/* Son ödeme */}
-            <div className="stat-card p-6">
+            <div className="stat-card group p-6">
               <div className="p-3 bg-green-50 text-green-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform duration-200"><CreditCard size={24} /></div>
               <h3 className="text-slate-500 text-sm font-medium">Son Ödeme Tarihi</h3>
               <p className="text-xl font-bold text-slate-800">
@@ -81,14 +81,14 @@ const ResidentDashboard = () => {
             </div>
 
             {/* Telefon */}
-            <div className="stat-card p-6">
+            <div className="stat-card group p-6">
               <div className="p-3 bg-blue-50 text-blue-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform duration-200"><User size={24} /></div>
               <h3 className="text-slate-500 text-sm font-medium">Kayıtlı Telefon</h3>
               <p className="text-xl font-bold text-slate-800">{currentUser.phone || '-'}</p>
             </div>
 
             {/* Talepler */}
-            <div className="stat-card p-6">
+            <div className="stat-card group p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl group-hover:scale-110 transition-transform duration-200"><AlertTriangle size={24} /></div>
                 {pendingComplaints > 0 && (

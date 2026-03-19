@@ -149,7 +149,7 @@ const SuperAdminPanel = () => {
                 { label: "Toplam Kullanıcı", value: dashboard?.totalUsers ?? 0, icon: Users, color: "blue" },
                 { label: "Toplam Gelir", value: (dashboard?.totalRevenue ?? 0).toLocaleString("tr-TR") + " ₺", icon: TrendingUp, color: "amber" },
               ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="stat-card">
+                <div key={label} className="stat-card group">
                   <div className={"inline-flex p-2 rounded-lg mb-3 bg-" + color + "-50 group-hover:scale-110 transition-transform duration-200"}>
                     <Icon size={20} className={"text-" + color + "-600"} />
                   </div>

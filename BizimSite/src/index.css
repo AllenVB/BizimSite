@@ -45,7 +45,7 @@
     @apply bg-white rounded-2xl shadow-sm border border-gray-100;
   }
   .stat-card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-default group;
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-default;
   }
 
   /* ── Inputlar ─────────────────────────────────────────────── */
