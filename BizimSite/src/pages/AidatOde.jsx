@@ -23,9 +23,15 @@ const AidatOde = () => {
       const total = expList.reduce((s, e) => s + e.amount, 0);
       if (c?.amount > 0) setMonthlyAidat(c.amount);
       else setMonthlyAidat(Math.round(total));
-      // Bu ay ödeme yapıldı mı?
-      const thisMonth = new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
-      const paid = pay.data.some(p => p.description?.includes(thisMonth));
+      // Mevcut dönemde ödeme yapıldı mı?
+      const periodStart = c?.periodStartDate ? new Date(c.periodStartDate) : null;
+      const periodEnd   = c?.periodEndDate
+        ? new Date(new Date(c.periodEndDate).setHours(23, 59, 59, 999)) : null;
+      const paid = pay.data.some(p => {
+        if (!periodStart || !periodEnd) return true;
+        const d = new Date(p.paidAt);
+        return d >= periodStart && d <= periodEnd;
+      });
       setIsPaid(paid);
     }).catch(console.error);
   }, []);

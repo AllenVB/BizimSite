@@ -36,7 +36,7 @@ public class PaymentsController : ControllerBase
         if (role == "resident") q = q.Where(p => p.UserId == userId);
 
         var list = await q.OrderByDescending(p => p.PaidAt).Select(p => new PaymentResponse(
-            p.Id, p.User != null ? p.User.Name : "", p.User != null ? p.User.Block : "", p.User != null ? p.User.No : "",
+            p.Id, p.UserId, p.User != null ? p.User.Name : "", p.User != null ? p.User.Block : "", p.User != null ? p.User.No : "",
             p.Amount, p.Description, p.Status, p.PaidAt)).ToListAsync();
         return Ok(list);
     }

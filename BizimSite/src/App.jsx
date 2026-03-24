@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import AdminHome from './pages/AdminHome';
 import ResidentDashboard from './pages/ResidentDashboard';
@@ -21,12 +21,22 @@ import CopTakibi from './pages/CopTakibi';
 import OduncPanel from './pages/OduncPanel';
 import SuperAdminPanel from './pages/SuperAdminPanel';
 
+/* Sayfa geçiş animasyonu — pathname değişince yeniden mount eder */
+const AnimatedContent = ({ children }) => {
+  const location = useLocation();
+  return (
+    <div key={location.pathname} className="page-enter flex-1">
+      {children}
+    </div>
+  );
+};
+
 const AdminLayout = () => {
   const [chatOpen, setChatOpen] = useState(false);
   return (
     <div className="flex">
       <Sidebar isAdmin={true} onChatToggle={() => setChatOpen(o => !o)} chatOpen={chatOpen} />
-      <div className="flex-1">
+      <AnimatedContent>
         <Routes>
           <Route index element={<AdminHome />} />
           <Route path="/users" element={<UserManagement />} />
@@ -40,48 +50,52 @@ const AdminLayout = () => {
           <Route path="/odunc" element={<OduncPanel />} />
           <Route path="/settings" element={<ProfileSettings />} />
         </Routes>
-      </div>
+      </AnimatedContent>
       {chatOpen && <ChatWidget onClose={() => setChatOpen(false)} />}
     </div>
   );
 };
 
-const ResidentLayout = () => (
-  <div className="flex">
-    <Sidebar isAdmin={false} />
-    <div className="flex-1">
-      <Routes>
-        <Route index element={<ResidentDashboard />} />
-        <Route path="/payments" element={<AidatOde />} />
-        <Route path="/payment-history" element={<PaymentHistory />} />
-        <Route path="/chat" element={<ChatPanel />} />
-        <Route path="/settings" element={<ProfileSettings />} />
-        <Route path="/finances" element={<FinancialManagement isAdmin={false} />} />
-        <Route path="/announcements" element={<Announcements isAdmin={false} />} />
-        <Route path="/complaints" element={<Complaints isAdmin={false} />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/cop" element={<CopTakibi />} />
-        <Route path="/odunc" element={<OduncPanel />} />
-        <Route path="/admins" element={<AdminManagement isResident={true} />} />
-      </Routes>
+const ResidentLayout = () => {
+  return (
+    <div className="flex">
+      <Sidebar isAdmin={false} />
+      <AnimatedContent>
+        <Routes>
+          <Route index element={<ResidentDashboard />} />
+          <Route path="/payments" element={<AidatOde />} />
+          <Route path="/payment-history" element={<PaymentHistory />} />
+          <Route path="/chat" element={<ChatPanel />} />
+          <Route path="/settings" element={<ProfileSettings />} />
+          <Route path="/finances" element={<FinancialManagement isAdmin={false} />} />
+          <Route path="/announcements" element={<Announcements isAdmin={false} />} />
+          <Route path="/complaints" element={<Complaints isAdmin={false} />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/cop" element={<CopTakibi />} />
+          <Route path="/odunc" element={<OduncPanel />} />
+          <Route path="/admins" element={<AdminManagement isResident={true} />} />
+        </Routes>
+      </AnimatedContent>
     </div>
-  </div>
-);
+  );
+};
 
-const KapiciLayout = () => (
-  <div className="flex">
-    <Sidebar isAdmin={false} />
-    <div className="flex-1">
-      <Routes>
-        <Route index element={<KapiciHome />} />
-        <Route path="/cop" element={<CopTakibi />} />
-        <Route path="/announcements" element={<Announcements isAdmin={true} />} />
-        <Route path="/complaints" element={<Complaints isAdmin={false} />} />
-        <Route path="/settings" element={<ProfileSettings />} />
-      </Routes>
+const KapiciLayout = () => {
+  return (
+    <div className="flex">
+      <Sidebar isAdmin={false} />
+      <AnimatedContent>
+        <Routes>
+          <Route index element={<KapiciHome />} />
+          <Route path="/cop" element={<CopTakibi />} />
+          <Route path="/announcements" element={<Announcements isAdmin={true} />} />
+          <Route path="/complaints" element={<Complaints isAdmin={false} />} />
+          <Route path="/settings" element={<ProfileSettings />} />
+        </Routes>
+      </AnimatedContent>
     </div>
-  </div>
-);
+  );
+};
 
 function App() {
   return (

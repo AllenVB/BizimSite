@@ -3,72 +3,115 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { TrendingUp, TrendingDown, Users, CreditCard, Wrench, Home,
-         AlertCircle, FileText, CheckCircle, XCircle, Printer } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, CreditCard, Wrench,
+         AlertCircle, FileText, CheckCircle, XCircle, Printer, Loader2 } from 'lucide-react';
+import { getUsers, getExpenses, getPayments, getComplaints, getAidatConfig } from '../services/api';
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
 
 const Reports = () => {
   const [tab, setTab] = useState('genel');
   const [users, setUsers] = useState([]);
-  const [expenses, setExpenses] = useState({ elevator: 0, doorman: 0, electricity: 0, general: 0 });
+  const [expenses, setExpenses] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [complaints, setComplaints] = useState([]);
-  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [config, setConfig] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUsers(JSON.parse(localStorage.getItem('users')) || []);
-    setExpenses(JSON.parse(localStorage.getItem('expenses')) || { elevator: 0, doorman: 0, electricity: 0, general: 0 });
-    setComplaints(JSON.parse(localStorage.getItem('complaints')) || []);
-    setPaymentHistory(JSON.parse(localStorage.getItem('paymentHistory')) || []);
+    Promise.all([getUsers(), getExpenses(), getPayments(), getComplaints(), getAidatConfig()])
+      .then(([u, e, p, c, cfg]) => {
+        setUsers(u.data || []);
+        setExpenses(e.data || []);
+        setPayments(p.data || []);
+        setComplaints(c.data || []);
+        setConfig(cfg.data || null);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const total = Object.values(expenses).reduce((a, b) => a + b, 0);
-  const monthlyAidat = Math.round(total / (users.length || 1));
-  const paidUsers = users.filter(u => u.paid);
-  const unpaidUsers = users.filter(u => !u.paid);
-  const totalCollection = paidUsers.length * monthlyAidat;
-  const netBalance = totalCollection - total;
-  const collectionRate = users.length > 0 ? Math.round((paidUsers.length / users.length) * 100) : 0;
+  // Sadece sakinler
+  const residents = users.filter(u => u.role === 'resident');
+  const paidUsers   = residents.filter(u => u.paid);
+  const unpaidUsers = residents.filter(u => !u.paid);
 
-  // Aylık veri - sadece gerçek ödeme geçmişi
-  const monthlyMap = {};
-  paymentHistory.forEach(p => {
-    const key = p.date?.split(' ').slice(-2).join(' ') || '';
-    if (key) monthlyMap[key] = (monthlyMap[key] || 0) + (p.amount || 0);
+  // Dönem filtresi
+  const periodStart = config?.periodStartDate ? new Date(config.periodStartDate) : null;
+  const periodEnd   = config?.periodEndDate
+    ? new Date(new Date(config.periodEndDate).setHours(23, 59, 59, 999)) : null;
+  const inPeriod = (dateStr) => {
+    if (!periodStart || !periodEnd) return true;
+    const d = new Date(dateStr);
+    return d >= periodStart && d <= periodEnd;
+  };
+
+  const periodExpenses = expenses.filter(e => inPeriod(e.createdAt));
+  const periodPayments = payments.filter(p => inPeriod(p.paidAt));
+
+  const totalExpenses   = periodExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalCollection = periodPayments.reduce((s, p) => s + p.amount, 0);
+  const monthlyAidat    = config?.amount || 0;
+  const netBalance      = totalCollection - totalExpenses;
+  const collectionRate  = residents.length > 0 ? Math.round((paidUsers.length / residents.length) * 100) : 0;
+
+  // Gider kategorisi dağılımı (dönem)
+  const expCatMap = {};
+  periodExpenses.forEach(e => {
+    const k = e.label || e.category || 'Diğer';
+    expCatMap[k] = (expCatMap[k] || 0) + e.amount;
   });
-  const monthlyData = Object.entries(monthlyMap).slice(-6).map(([month, gelir]) => ({
-    month: month.split(' ')[0], gelir, gider: total,
-  }));
-  if (monthlyData.length === 0 && (totalCollection > 0 || total > 0))
-    monthlyData.push({ month: new Date().toLocaleDateString('tr-TR', { month: 'short' }), gelir: totalCollection, gider: total });
+  const expenseData = Object.entries(expCatMap).map(([name, value]) => ({ name, value }));
 
-  const expenseData = [
-    { name: 'Asansör', value: expenses.elevator },
-    { name: 'Kapıcı', value: expenses.doorman },
-    { name: 'Elektrik', value: expenses.electricity },
-    { name: 'Genel', value: expenses.general },
-  ].filter(d => d.value > 0);
+  // Aylık tahsilat + gider grafiği (son 6 ay, tüm kayıtlar)
+  const monthPayMap = {};
+  payments.forEach(p => {
+    const key = new Date(p.paidAt).toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' });
+    monthPayMap[key] = (monthPayMap[key] || 0) + p.amount;
+  });
+  const monthExpMap = {};
+  expenses.forEach(e => {
+    const key = new Date(e.createdAt).toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' });
+    monthExpMap[key] = (monthExpMap[key] || 0) + e.amount;
+  });
+  const allMonthKeys = [...new Set([...Object.keys(monthPayMap), ...Object.keys(monthExpMap)])].slice(-6);
+  const monthlyData = allMonthKeys.map(m => ({
+    month: m,
+    gelir: monthPayMap[m] || 0,
+    gider: monthExpMap[m] || 0,
+  }));
+  if (monthlyData.length === 0 && (totalCollection > 0 || totalExpenses > 0)) {
+    monthlyData.push({
+      month: new Date().toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' }),
+      gelir: totalCollection,
+      gider: totalExpenses,
+    });
+  }
+
+  // Talep kategorisi dağılımı
+  const catLabelMap = { ariza: 'Arıza', temizlik: 'Temizlik', gurultu: 'Gürültü', guvenlik: 'Güvenlik', oneri: 'Öneri', diger: 'Diğer' };
+  const cmpCatMap = {};
+  complaints.forEach(c => {
+    const k = catLabelMap[c.category] || c.category || 'Diğer';
+    cmpCatMap[k] = (cmpCatMap[k] || 0) + 1;
+  });
+  const complaintData = Object.entries(cmpCatMap).map(([name, value]) => ({ name, value }));
 
   const paymentStatusData = [
-    { name: 'Ödedi', value: paidUsers.length },
+    { name: 'Ödedi',    value: paidUsers.length },
     { name: 'Ödemedi', value: unpaidUsers.length },
   ].filter(d => d.value > 0);
 
-  const catMap = {};
-  complaints.forEach(c => {
-    const lbl = { ariza: 'Arıza', temizlik: 'Temizlik', gurultu: 'Gürültü', guvenlik: 'Güvenlik', oneri: 'Öneri', diger: 'Diğer' };
-    const k = lbl[c.category] || 'Diğer';
-    catMap[k] = (catMap[k] || 0) + 1;
-  });
-  const complaintData = Object.entries(catMap).map(([name, value]) => ({ name, value }));
-
+  // Tooltip bileşeni
   const Tip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     return (
       <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-lg text-xs">
         <p className="font-semibold text-slate-700 mb-1">{label}</p>
         {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color }}>{p.name}: {p.value > 100 ? `₺${p.value.toLocaleString('tr-TR')}` : p.value}</p>
+          <p key={i} style={{ color: p.color }}>
+            {p.name}: {p.value > 100 ? `₺${Number(p.value).toLocaleString('tr-TR')}` : p.value}
+          </p>
         ))}
       </div>
     );
@@ -76,8 +119,8 @@ const Reports = () => {
 
   // PDF RAPORU OLUŞTUR
   const generatePDF = () => {
-    const now = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-    const monthName = new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+    const now       = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const monthName = config?.currentMonth || new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
 
     const paidRows = paidUsers.map(u => `
       <tr style="background:#f0fdf4">
@@ -97,31 +140,24 @@ const Reports = () => {
         <td style="text-align:right;font-weight:700;color:#dc2626">₺${monthlyAidat.toLocaleString('tr-TR')}</td>
       </tr>`).join('');
 
-    const expenseRows = [
-      { label: 'Asansör Bakımı', val: expenses.elevator },
-      { label: 'Kapıcı Ücreti', val: expenses.doorman },
-      { label: 'Ortak Alan Elektriği', val: expenses.electricity },
-      { label: 'Genel Giderler', val: expenses.general },
-    ].filter(r => r.val > 0).map(r => `
+    const expenseRows = periodExpenses.map(e => `
       <tr>
-        <td>${r.label}</td>
-        <td style="text-align:right;font-weight:600">₺${r.val.toLocaleString('tr-TR')}</td>
+        <td>${e.label || e.category}</td>
+        <td style="text-align:right;font-weight:600">₺${Number(e.amount).toLocaleString('tr-TR')}</td>
       </tr>`).join('');
 
-    // Basit bar chart SVG
-    const maxVal = Math.max(total, totalCollection, 1);
-    const w = 400, h = 120, pad = 40;
-    const barW = 60;
-    const gelirH = Math.round(((totalCollection / maxVal) * (h - pad)));
-    const giderH = Math.round(((total / maxVal) * (h - pad)));
+    const maxVal  = Math.max(totalExpenses, totalCollection, 1);
+    const w = 400, h = 120, pad = 40, barW = 60;
+    const gelirH = Math.round((totalCollection / maxVal) * (h - pad));
+    const giderH = Math.round((totalExpenses  / maxVal) * (h - pad));
     const chartSVG = `
       <svg width="${w}" height="${h}" style="overflow:visible">
-        <rect x="60" y="${h-pad-gelirH}" width="${barW}" height="${gelirH}" fill="#22c55e" rx="4"/>
-        <text x="${60+barW/2}" y="${h-pad-gelirH-6}" text-anchor="middle" font-size="11" fill="#15803d" font-weight="700">₺${totalCollection.toLocaleString('tr-TR')}</text>
-        <text x="${60+barW/2}" y="${h-8}" text-anchor="middle" font-size="11" fill="#555">Tahsilat</text>
+        <rect x="60"  y="${h-pad-gelirH}" width="${barW}" height="${gelirH}" fill="#22c55e" rx="4"/>
+        <text x="${60+barW/2}"  y="${h-pad-gelirH-6}" text-anchor="middle" font-size="11" fill="#15803d" font-weight="700">₺${totalCollection.toLocaleString('tr-TR')}</text>
+        <text x="${60+barW/2}"  y="${h-8}"             text-anchor="middle" font-size="11" fill="#555">Tahsilat</text>
         <rect x="200" y="${h-pad-giderH}" width="${barW}" height="${giderH}" fill="#ef4444" rx="4"/>
-        <text x="${200+barW/2}" y="${h-pad-giderH-6}" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">₺${total.toLocaleString('tr-TR')}</text>
-        <text x="${200+barW/2}" y="${h-8}" text-anchor="middle" font-size="11" fill="#555">Gider</text>
+        <text x="${200+barW/2}" y="${h-pad-giderH-6}" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">₺${totalExpenses.toLocaleString('tr-TR')}</text>
+        <text x="${200+barW/2}" y="${h-8}"             text-anchor="middle" font-size="11" fill="#555">Gider</text>
         <line x1="40" y1="${h-pad}" x2="${w-20}" y2="${h-pad}" stroke="#e2e8f0" stroke-width="1"/>
       </svg>`;
 
@@ -135,7 +171,6 @@ const Reports = () => {
   body { font-family: Arial, sans-serif; color: #1e293b; padding: 32px; font-size: 13px; }
   .header { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #2563eb; padding-bottom:16px; margin-bottom:24px; }
   .logo { font-size:22px; font-weight:900; color:#2563eb; }
-  .meta { text-align:right; color:#64748b; font-size:12px; }
   h2 { font-size:15px; font-weight:700; color:#1e293b; margin:20px 0 10px; }
   .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
   .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; text-align:center; }
@@ -145,82 +180,56 @@ const Reports = () => {
   th { background:#1e293b; color:#fff; padding:8px 12px; text-align:left; font-size:12px; }
   td { padding:7px 12px; border-bottom:1px solid #f1f5f9; }
   .section { margin-bottom:28px; page-break-inside:avoid; }
-  .net { font-size:16px; font-weight:800; color:${netBalance >= 0 ? '#15803d' : '#dc2626'}; }
-  @media print { body { padding: 20px; } button { display:none; } }
+  @media print { body { padding:20px; } .print-btn { display:none; } }
   .print-btn { background:#2563eb; color:#fff; border:none; padding:10px 24px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; margin-bottom:20px; }
 </style>
 </head>
 <body>
 <div class="header">
-  <div>
-    <div class="logo">🏢 BizimSite</div>
-    <div style="color:#64748b;font-size:12px;margin-top:4px">Apartman Yönetim Sistemi</div>
-  </div>
-  <div class="meta">
+  <div><div class="logo">🏢 BizimSite</div><div style="color:#64748b;font-size:12px;margin-top:4px">Apartman Yönetim Sistemi</div></div>
+  <div style="text-align:right;color:#64748b;font-size:12px">
     <div style="font-size:16px;font-weight:700;color:#1e293b">AİDAT RAPORU</div>
-    <div>${monthName}</div>
-    <div>Oluşturma: ${now}</div>
+    <div>${monthName}</div><div>Oluşturma: ${now}</div>
   </div>
 </div>
-
 <button class="print-btn" onclick="window.print()">🖨️ PDF Olarak Yazdır / Kaydet</button>
-
 <div class="stats">
   <div class="stat"><div class="val" style="color:#15803d">₺${totalCollection.toLocaleString('tr-TR')}</div><div class="lbl">Toplam Tahsilat</div></div>
-  <div class="stat"><div class="val" style="color:#dc2626">₺${total.toLocaleString('tr-TR')}</div><div class="lbl">Toplam Gider</div></div>
-  <div class="stat"><div class="val ${netBalance >= 0 ? 'style="color:#15803d"' : 'style="color:#dc2626"'}">${netBalance >= 0 ? '+' : ''}₺${netBalance.toLocaleString('tr-TR')}</div><div class="lbl">Net Bakiye</div></div>
+  <div class="stat"><div class="val" style="color:#dc2626">₺${totalExpenses.toLocaleString('tr-TR')}</div><div class="lbl">Toplam Gider</div></div>
+  <div class="stat"><div class="val" style="color:${netBalance>=0?'#15803d':'#dc2626'}">${netBalance>=0?'+':''}₺${netBalance.toLocaleString('tr-TR')}</div><div class="lbl">Net Bakiye</div></div>
   <div class="stat"><div class="val" style="color:#2563eb">${collectionRate}%</div><div class="lbl">Tahsilat Oranı</div></div>
 </div>
-
-<div class="section">
-  <h2>Gelir - Gider Karşılaştırması</h2>
-  <div style="padding:16px 0">${chartSVG}</div>
-</div>
-
+<div class="section"><h2>Gelir - Gider Karşılaştırması</h2><div style="padding:16px 0">${chartSVG}</div></div>
 <div class="section">
   <h2>✅ Ödeme Yapan Daireler (${paidUsers.length})</h2>
-  ${paidUsers.length > 0 ? `
-  <table>
-    <thead><tr><th>Ad Soyad</th><th>Daire</th><th>Telefon</th><th style="text-align:center">Durum</th><th style="text-align:right">Tutar</th></tr></thead>
-    <tbody>${paidRows}</tbody>
-  </table>` : '<p style="color:#64748b;padding:12px 0">Ödeme yapan daire bulunmuyor.</p>'}
+  ${paidUsers.length > 0 ? `<table><thead><tr><th>Ad Soyad</th><th>Daire</th><th>Telefon</th><th style="text-align:center">Durum</th><th style="text-align:right">Tutar</th></tr></thead><tbody>${paidRows}</tbody></table>` : '<p style="color:#64748b;padding:12px 0">Ödeme yapan daire bulunmuyor.</p>'}
 </div>
-
 <div class="section">
   <h2>❌ Ödeme Yapmayan Daireler (${unpaidUsers.length})</h2>
-  ${unpaidUsers.length > 0 ? `
-  <table>
-    <thead><tr><th>Ad Soyad</th><th>Daire</th><th>Telefon</th><th style="text-align:center">Durum</th><th style="text-align:right">Tutar</th></tr></thead>
-    <tbody>${unpaidRows}</tbody>
-  </table>` : '<p style="color:#64748b;padding:12px 0">Tüm daireler ödeme yapmış.</p>'}
+  ${unpaidUsers.length > 0 ? `<table><thead><tr><th>Ad Soyad</th><th>Daire</th><th>Telefon</th><th style="text-align:center">Durum</th><th style="text-align:right">Tutar</th></tr></thead><tbody>${unpaidRows}</tbody></table>` : '<p style="color:#64748b;padding:12px 0">Tüm daireler ödeme yapmış.</p>'}
 </div>
-
-${expenseData.length > 0 ? `
+${periodExpenses.length > 0 ? `
 <div class="section">
   <h2>📊 Gider Dağılımı</h2>
-  <table>
-    <thead><tr><th>Gider Kalemi</th><th style="text-align:right">Tutar</th></tr></thead>
-    <tbody>
-      ${expenseRows}
-      <tr style="background:#1e293b;color:#fff">
-        <td style="font-weight:700">TOPLAM</td>
-        <td style="text-align:right;font-weight:700">₺${total.toLocaleString('tr-TR')}</td>
-      </tr>
-    </tbody>
-  </table>
-  <p style="font-size:12px;color:#64748b;margin-top:8px">Kişi başı aidat: ₺${monthlyAidat.toLocaleString('tr-TR')} (${users.length} sakin)</p>
+  <table><thead><tr><th>Gider Kalemi</th><th style="text-align:right">Tutar</th></tr></thead>
+  <tbody>${expenseRows}
+    <tr style="background:#1e293b;color:#fff"><td style="font-weight:700">TOPLAM</td><td style="text-align:right;font-weight:700">₺${totalExpenses.toLocaleString('tr-TR')}</td></tr>
+  </tbody></table>
 </div>` : ''}
-
 <div style="border-top:1px solid #e2e8f0;margin-top:32px;padding-top:16px;color:#94a3b8;font-size:11px;display:flex;justify-content:space-between">
-  <span>BizimSite - Apartman Yönetim Sistemi</span>
-  <span>Otomatik oluşturuldu • ${now}</span>
+  <span>BizimSite - Apartman Yönetim Sistemi</span><span>Otomatik oluşturuldu • ${now}</span>
 </div>
 </body></html>`;
-
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
   };
+
+  if (loading) return (
+    <div className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+      <Loader2 size={32} className="animate-spin text-slate-400" />
+    </div>
+  );
 
   return (
     <div className="ml-64 min-h-screen bg-slate-50 p-8">
@@ -230,7 +239,11 @@ ${expenseData.length > 0 ? `
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
               <TrendingUp className="text-blue-500" /> Raporlar
             </h1>
-            <p className="text-slate-500 mt-1">Gerçek zamanlı site verileri</p>
+            <p className="text-slate-500 mt-1">
+              {config?.currentMonth
+                ? <>Dönem: <span className="font-semibold text-blue-600">{config.currentMonth}</span></>
+                : 'Gerçek zamanlı site verileri'}
+            </p>
           </div>
         </div>
 
@@ -249,18 +262,19 @@ ${expenseData.length > 0 ? `
         {/* GENEL ANALİZ */}
         {tab === 'genel' && (
           <>
-            {users.length === 0 && total === 0 && (
+            {residents.length === 0 && totalExpenses === 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
                 <AlertCircle size={18} className="text-amber-500" />
-                <p className="text-amber-700 text-sm">Henüz veri girilmemiş. Sakin ve gider ekledikçe grafikler dolacak.</p>
+                <p className="text-amber-700 text-sm">Henüz veri yok. Sakin ve gider ekledikçe grafikler dolacak.</p>
               </div>
             )}
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {[
-                { label: 'Aylık Tahsilat', value: `₺${totalCollection.toLocaleString('tr-TR')}`, icon: <TrendingUp size={18} />, c: 'text-green-500', bg: 'bg-green-50' },
-                { label: 'Aylık Gider', value: `₺${total.toLocaleString('tr-TR')}`, icon: <TrendingDown size={18} />, c: 'text-red-500', bg: 'bg-red-50' },
-                { label: 'Net Bakiye', value: `${netBalance >= 0 ? '+' : ''}₺${netBalance.toLocaleString('tr-TR')}`, icon: <CreditCard size={18} />, c: netBalance >= 0 ? 'text-emerald-500' : 'text-red-500', bg: netBalance >= 0 ? 'bg-emerald-50' : 'bg-red-50' },
-                { label: 'Toplam Sakin', value: users.length, icon: <Users size={18} />, c: 'text-blue-500', bg: 'bg-blue-50' },
+                { label: 'Dönem Tahsilat', value: `₺${totalCollection.toLocaleString('tr-TR')}`, icon: <TrendingUp size={18} />, c: 'text-green-500', bg: 'bg-green-50' },
+                { label: 'Dönem Gider',    value: `₺${totalExpenses.toLocaleString('tr-TR')}`,   icon: <TrendingDown size={18} />, c: 'text-red-500', bg: 'bg-red-50' },
+                { label: 'Net Bakiye',     value: `${netBalance >= 0 ? '+' : ''}₺${netBalance.toLocaleString('tr-TR')}`, icon: <CreditCard size={18} />, c: netBalance >= 0 ? 'text-emerald-500' : 'text-red-500', bg: netBalance >= 0 ? 'bg-emerald-50' : 'bg-red-50' },
+                { label: 'Toplam Sakin',   value: residents.length, icon: <Users size={18} />, c: 'text-blue-500', bg: 'bg-blue-50' },
               ].map((c, i) => (
                 <div key={i} className="stat-card group">
                   <div className={`p-2 rounded-lg w-fit mb-3 ${c.bg} ${c.c} group-hover:scale-110 transition-transform duration-200`}>{c.icon}</div>
@@ -272,12 +286,12 @@ ${expenseData.length > 0 ? `
 
             {monthlyData.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6">
-                <h2 className="font-bold text-slate-800 mb-4">Aylık Tahsilat & Gider</h2>
+                <h2 className="font-bold text-slate-800 mb-4">Aylık Tahsilat &amp; Gider</h2>
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={monthlyData}>
                     <defs>
-                      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} /></linearGradient>
-                      <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} /><stop offset="95%" stopColor="#ef4444" stopOpacity={0} /></linearGradient>
+                      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/><stop offset="95%" stopColor="#22c55e" stopOpacity={0}/></linearGradient>
+                      <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/><stop offset="95%" stopColor="#ef4444" stopOpacity={0}/></linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
@@ -285,7 +299,7 @@ ${expenseData.length > 0 ? `
                     <Tooltip content={<Tip />} />
                     <Legend />
                     <Area type="monotone" dataKey="gelir" name="Tahsilat" stroke="#22c55e" fill="url(#g1)" strokeWidth={2} />
-                    <Area type="monotone" dataKey="gider" name="Gider" stroke="#ef4444" fill="url(#g2)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="gider" name="Gider"    stroke="#ef4444" fill="url(#g2)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -295,7 +309,7 @@ ${expenseData.length > 0 ? `
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <h2 className="font-bold text-slate-800 mb-4">Gider Dağılımı</h2>
                 {expenseData.length === 0 ? (
-                  <div className="py-10 text-center text-slate-400 text-sm">Gider girilmemiş</div>
+                  <div className="py-10 text-center text-slate-400 text-sm">Bu dönemde gider girilmemiş</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
@@ -303,7 +317,7 @@ ${expenseData.length > 0 ? `
                         label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false}>
                         {expenseData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip formatter={v => `₺${v.toLocaleString('tr-TR')}`} />
+                      <Tooltip formatter={v => `₺${Number(v).toLocaleString('tr-TR')}`} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -344,7 +358,7 @@ ${expenseData.length > 0 ? `
 
             {complaintData.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Wrench size={16} className="text-amber-500" /> Talepler</h2>
+                <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Wrench size={16} className="text-amber-500" /> Talep Kategorileri</h2>
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={complaintData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -364,11 +378,10 @@ ${expenseData.length > 0 ? `
         {/* AİDAT RAPORU */}
         {tab === 'aidat' && (
           <div>
-            {/* Özet + PDF Butonu */}
             <div className="flex items-start justify-between gap-4 mb-6">
               <div className="grid grid-cols-4 gap-4 flex-1">
                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
-                  <p className="text-2xl font-bold text-slate-800">{users.length}</p>
+                  <p className="text-2xl font-bold text-slate-800">{residents.length}</p>
                   <p className="text-xs text-slate-500 mt-1">Toplam Daire</p>
                 </div>
                 <div className="bg-green-50 rounded-2xl p-4 border border-green-100 text-center">
@@ -452,17 +465,17 @@ ${expenseData.length > 0 ? `
               )}
             </div>
 
-            {/* Gider Özeti */}
+            {/* Dönem Gider Özeti */}
             {expenseData.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 className="font-bold text-slate-800 mb-4">Gider Dağılımı</h2>
+                <h2 className="font-bold text-slate-800 mb-4">Dönem Gider Dağılımı</h2>
                 <div className="flex gap-6 items-center">
                   <ResponsiveContainer width="40%" height={180}>
                     <PieChart>
                       <Pie data={expenseData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={4} dataKey="value">
                         {expenseData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip formatter={v => `₺${v.toLocaleString('tr-TR')}`} />
+                      <Tooltip formatter={v => `₺${Number(v).toLocaleString('tr-TR')}`} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="flex-1 space-y-2">
@@ -472,12 +485,12 @@ ${expenseData.length > 0 ? `
                           <div className="w-3 h-3 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
                           <span className="text-sm text-slate-600">{item.name}</span>
                         </div>
-                        <span className="font-semibold text-sm">₺{item.value.toLocaleString('tr-TR')}</span>
+                        <span className="font-semibold text-sm">₺{Number(item.value).toLocaleString('tr-TR')}</span>
                       </div>
                     ))}
                     <div className="flex justify-between pt-2">
                       <span className="font-bold text-slate-700">Toplam</span>
-                      <span className="font-bold text-slate-800">₺{total.toLocaleString('tr-TR')}</span>
+                      <span className="font-bold text-slate-800">₺{totalExpenses.toLocaleString('tr-TR')}</span>
                     </div>
                   </div>
                 </div>

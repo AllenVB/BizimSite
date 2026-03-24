@@ -38,6 +38,10 @@
   0%,  100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
   50%        { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
 }
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
 
 /* Animasyon yardımcı sınıfları */
 .anim-float-1   { animation: float-1  14s ease-in-out infinite; }
@@ -48,6 +52,7 @@
 .anim-pulse     { animation: pulse-soft 5s ease-in-out infinite; }
 .anim-fade-up   { animation: fade-up  0.5s ease-out forwards; }
 .anim-spin-slow { animation: spin-slow 32s linear infinite; }
+.page-enter     { animation: page-enter 0.22s ease-out both; }
 
 /* ═══════════════════════════════════════════════════════════
    BASE

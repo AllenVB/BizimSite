@@ -24,8 +24,16 @@ const ResidentDashboard = () => {
         // Sadece kendi taleplerim
         setMyComplaints(c.data.filter(x => x.userId === currentUser.id));
         setAidatConfig(cfg.data);
-        // Kendi ödeme durumum
-        const mine = p.data.find(x => x.userId === currentUser.id);
+        // Mevcut aidat döneminde ödeme yapıldı mı?
+        // API, resident için sadece kendi ödemelerini döndürür
+        const periodStart = cfg.data?.periodStartDate ? new Date(cfg.data.periodStartDate) : null;
+        const periodEnd   = cfg.data?.periodEndDate
+          ? new Date(new Date(cfg.data.periodEndDate).setHours(23, 59, 59, 999)) : null;
+        const mine = p.data.find(x => {
+          if (!periodStart || !periodEnd) return true; // dönem yoksa herhangi ödeme yeterli
+          const d = new Date(x.paidAt);
+          return d >= periodStart && d <= periodEnd;
+        });
         setMyPayment(mine || null);
       } catch (err) {
         // sessiz hata
@@ -37,7 +45,7 @@ const ResidentDashboard = () => {
   }, []);
 
   const monthlyAidat = aidatConfig?.amount || 0;
-  const isPaid = myPayment?.isPaid || false;
+  const isPaid = !!myPayment; // mevcut dönemde ödeme varsa ödendi
   const pendingComplaints = myComplaints.filter(c => c.status !== 'resolved').length;
 
   return (

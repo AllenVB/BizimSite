@@ -7,6 +7,22 @@ const COLORS = ['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#06B6D4'];
 
 const MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
+const EXPENSE_CATEGORIES = [
+  { value: 'elektrik',  label: 'Elektrik',        color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'su',        label: 'Su',               color: 'bg-blue-100 text-blue-700' },
+  { value: 'dogalgaz',  label: 'Doğalgaz',         color: 'bg-orange-100 text-orange-700' },
+  { value: 'temizlik',  label: 'Temizlik',          color: 'bg-green-100 text-green-700' },
+  { value: 'asansor',   label: 'Asansör Bakımı',   color: 'bg-indigo-100 text-indigo-700' },
+  { value: 'guvenlik',  label: 'Güvenlik',          color: 'bg-red-100 text-red-700' },
+  { value: 'bahce',     label: 'Bahçe Bakımı',     color: 'bg-lime-100 text-lime-700' },
+  { value: 'tamirat',   label: 'Tamirat/Bakım',    color: 'bg-rose-100 text-rose-700' },
+  { value: 'general',   label: 'Genel Giderler',   color: 'bg-slate-100 text-slate-600' },
+  { value: 'diger',     label: 'Diğer',             color: 'bg-gray-100 text-gray-600' },
+];
+
+const getCatInfo = (val) =>
+  EXPENSE_CATEGORIES.find(c => c.value === val) || { label: val, color: 'bg-slate-100 text-slate-600' };
+
 const FinancialManagement = ({ isAdmin }) => {
   const [expenses, setExpenses] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -14,7 +30,7 @@ const FinancialManagement = ({ isAdmin }) => {
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showAidatForm, setShowAidatForm] = useState(false);
   const [showNewMonthModal, setShowNewMonthModal] = useState(false);
-  const [expForm, setExpForm] = useState({ label: '', amount: '' });
+  const [expForm, setExpForm] = useState({ label: '', amount: '', category: 'general' });
   const [aidatForm, setAidatForm] = useState({ dueDay: 1, amount: 0, currentMonth: '' });
   const [newMonthForm, setNewMonthForm] = useState({ monthName: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
@@ -45,15 +61,28 @@ const FinancialManagement = ({ isAdmin }) => {
     setShowNewMonthModal(true);
   };
 
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const totalIncome = payments.reduce((s, p) => s + p.amount, 0);
-  const netBalance = totalIncome - totalExpenses;
+  // Mevcut aidat dönemine göre filtrele (dönem yoksa tüm kayıtlar)
+  const periodStart = config?.periodStartDate ? new Date(config.periodStartDate) : null;
+  const periodEnd   = config?.periodEndDate   ? new Date(new Date(config.periodEndDate).setHours(23, 59, 59, 999)) : null;
+
+  const inPeriod = (dateStr) => {
+    if (!periodStart || !periodEnd) return true;
+    const d = new Date(dateStr);
+    return d >= periodStart && d <= periodEnd;
+  };
+
+  const periodExpenses = expenses.filter(e => inPeriod(e.createdAt));
+  const periodPayments = payments.filter(p => inPeriod(p.paidAt));
+
+  const totalExpenses = periodExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalIncome   = periodPayments.reduce((s, p) => s + p.amount, 0);
+  const netBalance    = totalIncome - totalExpenses;
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
     try {
-      await createExpense({ category: 'general', label: expForm.label, amount: parseFloat(expForm.amount) });
-      setExpForm({ label: '', amount: '' });
+      await createExpense({ category: expForm.category, label: expForm.label, amount: parseFloat(expForm.amount) });
+      setExpForm({ label: '', amount: '', category: 'general' });
       setShowExpenseForm(false);
       load();
     } catch { alert('Eklenemedi!'); }
@@ -102,7 +131,7 @@ const FinancialManagement = ({ isAdmin }) => {
     }
   };
 
-  const pieData = expenses.map(e => ({ name: e.label || e.category, value: e.amount }));
+  const pieData = periodExpenses.map(e => ({ name: e.label || e.category, value: e.amount }));
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '—';
 
@@ -114,7 +143,11 @@ const FinancialManagement = ({ isAdmin }) => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Mali Durum</h1>
-            <p className="text-slate-500 mt-1">Apartman gelir-gider takibi</p>
+            <p className="text-slate-500 mt-1">
+              {config?.currentMonth ? (
+                <>Dönem: <span className="font-semibold text-blue-600">{config.currentMonth}</span></>
+              ) : 'Apartman gelir-gider takibi'}
+            </p>
           </div>
           {canEdit && (
             <div className="flex gap-3">
@@ -201,11 +234,26 @@ const FinancialManagement = ({ isAdmin }) => {
 
             {showExpenseForm && canEdit && (
               <form onSubmit={handleAddExpense} className="mb-4 p-4 bg-slate-50 rounded-xl space-y-3">
-                <input className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400"
-                  value={expForm.label} onChange={e => setExpForm({...expForm, label: e.target.value})} required placeholder="Gider adı (örn: Çevre temizliği)" />
-                <input type="number" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400"
-                  value={expForm.amount} onChange={e => setExpForm({...expForm, amount: e.target.value})} required placeholder="Tutar (₺)" />
-                <div className="flex gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Kategori</label>
+                  <select className="input-field text-sm"
+                    value={expForm.category} onChange={e => setExpForm({...expForm, category: e.target.value})}>
+                    {EXPENSE_CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Açıklama</label>
+                  <input className="input-field text-sm"
+                    value={expForm.label} onChange={e => setExpForm({...expForm, label: e.target.value})} required placeholder="Gider açıklaması (örn: Çevre temizliği)" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Tutar (₺)</label>
+                  <input type="number" className="input-field text-sm"
+                    value={expForm.amount} onChange={e => setExpForm({...expForm, amount: e.target.value})} required placeholder="0" min="0" step="0.01" />
+                </div>
+                <div className="flex gap-2 pt-1">
                   <button type="submit" className="btn-primary text-sm py-1.5 px-4">Ekle</button>
                   <button type="button" onClick={() => setShowExpenseForm(false)} className="btn-secondary text-sm py-1.5 px-4">İptal</button>
                 </div>
@@ -213,19 +261,28 @@ const FinancialManagement = ({ isAdmin }) => {
             )}
 
             <div className="space-y-2">
-              {expenses.length === 0 ? (
-                <p className="text-slate-400 text-sm text-center py-4">Henüz gider yok</p>
-              ) : expenses.map(e => (
-                <div key={e.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                  <span className="text-slate-600 text-sm">{e.label || e.category}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-sm">₺{e.amount.toLocaleString('tr-TR')}</span>
-                    {canEdit && (
-                      <button onClick={() => handleDeleteExpense(e.id)} className="text-slate-300 hover:text-red-400 transition"><Trash2 size={14} /></button>
-                    )}
+              {periodExpenses.length === 0 ? (
+                <p className="text-slate-400 text-sm text-center py-4">Bu dönemde gider yok</p>
+              ) : periodExpenses.map(e => {
+                const catInfo = getCatInfo(e.category);
+                return (
+                  <div key={e.id} className="flex items-start justify-between py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 px-1 rounded-lg transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${catInfo.color}`}>{catInfo.label}</span>
+                      </div>
+                      <p className="text-slate-700 text-sm font-medium leading-snug">{e.label || catInfo.label}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{new Date(e.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <div className="flex items-center gap-3 ml-3 flex-shrink-0">
+                      <span className="font-bold text-sm text-slate-800">₺{e.amount.toLocaleString('tr-TR')}</span>
+                      {canEdit && (
+                        <button onClick={() => handleDeleteExpense(e.id)} className="text-slate-300 hover:text-red-400 transition p-1 rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
