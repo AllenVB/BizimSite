@@ -1,14 +1,13 @@
 import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, Building2, History, BarChart2, Shield, Settings, PackageOpen } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
-const Sidebar = ({ isAdmin }) => {
+const Sidebar = ({ isAdmin, onChatToggle, chatOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const isKapici = currentUser.role === 'kapici';
   const planType = currentUser.planType || 'basic';
   const isPremium = planType === 'premium' || planType === 'enterprise';
-  // Kapıcısı olan binalarda çöp takibi görünür; kapıcının kendisi her zaman görür
   const hasKapici = isKapici || currentUser.hasKapici === true;
 
   const adminItems = [
@@ -20,7 +19,7 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <AlertTriangle size={20} />, text: 'Talepler', path: '/admin/complaints' },
     { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/admin/reports', premium: true },
     { icon: <Shield size={20} />, text: 'Yoneticiler', path: '/admin/admins' },
-    { icon: <MessageSquare size={20} />, text: 'Sohbet Paneli', path: '/admin/chat' },
+    { icon: <MessageSquare size={20} />, text: 'Sohbet Paneli', chat: true },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/admin/cop', kapici: true },
     { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/admin/odunc', premium: true },
   ];
@@ -32,6 +31,7 @@ const Sidebar = ({ isAdmin }) => {
     { icon: <Megaphone size={20} />, text: 'Duyurular', path: '/resident/announcements' },
     { icon: <AlertTriangle size={20} />, text: 'Taleplerim', path: '/resident/complaints' },
     { icon: <MessageSquare size={20} />, text: 'Sakinler Sohbet', path: '/resident/chat' },
+    { icon: <Shield size={20} />, text: 'Yoneticiler', path: '/resident/admins' },
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/resident/finances' },
     { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/resident/reports', premium: true },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/resident/cop', kapici: true },
@@ -59,17 +59,32 @@ const Sidebar = ({ isAdmin }) => {
       </div>
       <nav className="flex-1 mt-4 px-3 space-y-1 overflow-y-auto">
         {menuItems.map((item, i) => {
+          // Admin sohbet → toggle butonu
+          if (item.chat) {
+            return (
+              <button key={i} onClick={onChatToggle}
+                className={`nav-item w-full ${chatOpen ? 'nav-item-active' : 'nav-item-inactive'}`}>
+                <span>{item.icon}</span>
+                <span className="text-sm font-medium">{item.text}</span>
+                {chatOpen && (
+                  <span className="ml-auto text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">Açık</span>
+                )}
+              </button>
+            );
+          }
+
           const isActive = location.pathname === item.path ||
             (item.path !== basePath && location.pathname.startsWith(item.path));
           return (
             <Link key={i} to={item.path}
               className={`nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'}`}>
-              <span className={`transition-transform duration-150 ${isActive ? '' : 'group-hover:scale-110'}`}>{item.icon}</span>
+              <span>{item.icon}</span>
               <span className="text-sm font-medium">{item.text}</span>
             </Link>
           );
         })}
       </nav>
+
       <div className="mt-auto border-t border-slate-800 p-4">
         <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-all cursor-pointer group mb-4">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700 text-sm ring-2 ring-blue-400/20 hover:ring-blue-400/50 transition-all duration-200">
@@ -80,6 +95,15 @@ const Sidebar = ({ isAdmin }) => {
             <p className="text-xs text-slate-400">
               {isKapici ? 'Kapici' : isAdmin ? (currentUser.isMainAdmin ? 'Ana Yonetici' : 'Yonetici') : `${currentUser.block} Blok - No: ${currentUser.no}`}
             </p>
+            {isAdmin && (
+              <span className={`inline-flex items-center mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                planType === 'enterprise' ? 'bg-violet-500/20 text-violet-300 ring-1 ring-violet-400/30' :
+                planType === 'premium'    ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30' :
+                                           'bg-slate-600/60 text-slate-400 ring-1 ring-slate-500/30'
+              }`}>
+                {planType === 'enterprise' ? '⭐ Enterprise' : planType === 'premium' ? '✦ Premium' : '· Basic'}
+              </span>
+            )}
           </div>
           {!isAdmin && (
             <button onClick={() => navigate(`${basePath}/settings`)} className="text-slate-500 group-hover:text-white transition-colors">

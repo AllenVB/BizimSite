@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Megaphone, Plus, X, Lock, Trash2 } from 'lucide-react';
+import { Megaphone, Plus, X, Lock, Trash2, CheckCircle } from 'lucide-react';
 import { getAnnouncements, createAnnouncement, deleteAnnouncement } from '../services/api';
 
 const Announcements = ({ isAdmin }) => {
@@ -7,6 +7,9 @@ const Announcements = ({ isAdmin }) => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', content: '' });
   const [loading, setLoading] = useState(true);
+  const [seenIds, setSeenIds] = useState(() =>
+    JSON.parse(localStorage.getItem('seenAnnouncements') || '[]')
+  );
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const canCreate = currentUser.role === 'admin' || currentUser.role === 'kapici';
 
@@ -32,6 +35,22 @@ const Announcements = ({ isAdmin }) => {
     } catch (err) { alert('Silinemedi!'); }
   };
 
+  const markSeen = (id) => {
+    if (seenIds.includes(id)) return;
+    const updated = [...seenIds, id];
+    setSeenIds(updated);
+    localStorage.setItem('seenAnnouncements', JSON.stringify(updated));
+  };
+
+  const markAllSeen = () => {
+    const allIds = announcements.map(a => a.id);
+    const updated = [...new Set([...seenIds, ...allIds])];
+    setSeenIds(updated);
+    localStorage.setItem('seenAnnouncements', JSON.stringify(updated));
+  };
+
+  const unreadCount = announcements.filter(a => !seenIds.includes(a.id)).length;
+
   const roleLabel = (role) => role === 'admin' ? 'Yönetici' : role === 'kapici' ? 'Kapıcı' : 'Sakin';
 
   return (
@@ -42,31 +61,42 @@ const Announcements = ({ isAdmin }) => {
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
               <Megaphone className="text-blue-500" /> Duyurular
             </h1>
-            <p className="text-slate-500 mt-1">Apartman duyuruları</p>
+            <p className="text-slate-500 mt-1">
+              {unreadCount > 0
+                ? <span className="text-blue-600 font-semibold">{unreadCount} okunmamış duyuru</span>
+                : 'Tüm duyurular okundu'}
+            </p>
           </div>
-          {canCreate ? (
-            <button onClick={() => setShowForm(!showForm)}
-              className="btn-primary">
-              {showForm ? <X size={18} /> : <Plus size={18} />}
-              {showForm ? 'İptal' : 'Yeni Duyuru'}
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 text-slate-400 text-sm bg-slate-100 px-4 py-2 rounded-xl">
-              <Lock size={16} /> Sadece yöneticiler oluşturabilir
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button onClick={markAllSeen}
+                className="btn-ghost text-sm">
+                <CheckCircle size={16} /> Tümünü okundu işaretle
+              </button>
+            )}
+            {canCreate ? (
+              <button onClick={() => setShowForm(!showForm)} className="btn-primary">
+                {showForm ? <X size={18} /> : <Plus size={18} />}
+                {showForm ? 'İptal' : 'Yeni Duyuru'}
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-slate-400 text-sm bg-slate-100 px-4 py-2 rounded-xl">
+                <Lock size={16} /> Sadece yöneticiler oluşturabilir
+              </div>
+            )}
+          </div>
         </div>
 
         {showForm && canCreate && (
           <form onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-1 block">Başlık</label>
-              <input className="w-full px-4 py-2.5 border border-slate-200 rounded-xl outline-none focus:border-blue-400"
+              <input className="input-field"
                 value={form.title} onChange={e => setForm({...form, title: e.target.value})} required placeholder="Duyuru başlığı" />
             </div>
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-1 block">İçerik</label>
-              <textarea rows={4} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl outline-none focus:border-blue-400 resize-none"
+              <textarea rows={4} className="textarea-field"
                 value={form.content} onChange={e => setForm({...form, content: e.target.value})} required placeholder="Duyuru içeriği..." />
             </div>
             <div className="flex gap-3">
@@ -85,27 +115,46 @@ const Announcements = ({ isAdmin }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {announcements.map(a => (
-              <div key={a.id} className="card p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
-                        {roleLabel(a.authorRole)}
-                      </span>
-                      <span className="text-xs text-slate-400">{a.author} · {new Date(a.createdAt).toLocaleDateString('tr-TR')}</span>
+            {announcements.map(a => {
+              const isRead = seenIds.includes(a.id);
+              return (
+                <div key={a.id} className={`card p-6 ${!isRead ? 'border-blue-200 ring-1 ring-blue-100' : ''}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        {!isRead && (
+                          <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                        )}
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
+                          {roleLabel(a.authorRole)}
+                        </span>
+                        <span className="text-xs text-slate-400">{a.author} · {new Date(a.createdAt).toLocaleDateString('tr-TR')}</span>
+                      </div>
+                      <h3 className="font-bold text-slate-800 text-lg mb-2">{a.title}</h3>
+                      <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{a.content}</p>
                     </div>
-                    <h3 className="font-bold text-slate-800 text-lg mb-2">{a.title}</h3>
-                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{a.content}</p>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      {!isRead && (
+                        <button onClick={() => markSeen(a.id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-95">
+                          <CheckCircle size={14} /> Okundu
+                        </button>
+                      )}
+                      {isRead && (
+                        <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                          <CheckCircle size={13} /> Okundu
+                        </span>
+                      )}
+                      {currentUser.role === 'admin' && (
+                        <button onClick={() => handleDelete(a.id)} className="btn-icon text-slate-300 hover:text-red-400">
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {currentUser.role === 'admin' && (
-                    <button onClick={() => handleDelete(a.id)} className="btn-icon text-slate-300 hover:text-red-400 flex-shrink-0">
-                      <Trash2 size={18} />
-                    </button>
-                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

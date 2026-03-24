@@ -9,7 +9,7 @@ const ChatPanel = () => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [residents, setResidents] = useState([]);
-  const [showResidents, setShowResidents] = useState(false);
+  const [showResidents, setShowResidents] = useState(true);
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};

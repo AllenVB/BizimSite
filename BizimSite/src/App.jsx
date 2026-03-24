@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import AdminHome from './pages/AdminHome';
@@ -8,6 +9,7 @@ import ProfileSettings from './pages/ProfileSettings';
 import FinancialManagement from './pages/FinancialManagement';
 import AidatOde from './pages/AidatOde';
 import Sidebar from './components/Sidebar';
+import ChatWidget from './components/ChatWidget';
 import UserManagement from './pages/UserManagement';
 import Announcements from './pages/Announcements';
 import Complaints from './pages/Complaints';
@@ -19,27 +21,30 @@ import CopTakibi from './pages/CopTakibi';
 import OduncPanel from './pages/OduncPanel';
 import SuperAdminPanel from './pages/SuperAdminPanel';
 
-const AdminLayout = () => (
-  <div className="flex">
-    <Sidebar isAdmin={true} />
-    <div className="flex-1">
-      <Routes>
-        <Route index element={<AdminHome />} />
-        <Route path="/users" element={<UserManagement />} />
-        <Route path="/blocks" element={<BlockManagement />} />
-        <Route path="/chat" element={<ChatPanel />} />
-        <Route path="/finances" element={<FinancialManagement isAdmin={true} />} />
-        <Route path="/announcements" element={<Announcements isAdmin={true} />} />
-        <Route path="/complaints" element={<Complaints isAdmin={true} />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/admins" element={<AdminManagement />} />
-        <Route path="/cop" element={<CopTakibi />} />
-        <Route path="/odunc" element={<OduncPanel />} />
-        <Route path="/settings" element={<ProfileSettings />} />
-      </Routes>
+const AdminLayout = () => {
+  const [chatOpen, setChatOpen] = useState(false);
+  return (
+    <div className="flex">
+      <Sidebar isAdmin={true} onChatToggle={() => setChatOpen(o => !o)} chatOpen={chatOpen} />
+      <div className="flex-1">
+        <Routes>
+          <Route index element={<AdminHome />} />
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/blocks" element={<BlockManagement />} />
+          <Route path="/finances" element={<FinancialManagement isAdmin={true} />} />
+          <Route path="/announcements" element={<Announcements isAdmin={true} />} />
+          <Route path="/complaints" element={<Complaints isAdmin={true} />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/admins" element={<AdminManagement />} />
+          <Route path="/cop" element={<CopTakibi />} />
+          <Route path="/odunc" element={<OduncPanel />} />
+          <Route path="/settings" element={<ProfileSettings />} />
+        </Routes>
+      </div>
+      {chatOpen && <ChatWidget onClose={() => setChatOpen(false)} />}
     </div>
-  </div>
-);
+  );
+};
 
 const ResidentLayout = () => (
   <div className="flex">
@@ -57,6 +62,7 @@ const ResidentLayout = () => (
         <Route path="/reports" element={<Reports />} />
         <Route path="/cop" element={<CopTakibi />} />
         <Route path="/odunc" element={<OduncPanel />} />
+        <Route path="/admins" element={<AdminManagement isResident={true} />} />
       </Routes>
     </div>
   </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, TrendingUp, TrendingDown, AlertCircle, CreditCard, Wallet, Bell, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
-import { getUsers, getExpenses, getAnnouncements, getComplaints, getPayments } from '../services/api';
+import { getUsers, getExpenses, getAnnouncements, getComplaints, getPayments, getAidatConfig } from '../services/api';
+import AnnouncementBell from '../components/AnnouncementBell';
 
 const AdminHome = () => {
   const [users, setUsers] = useState([]);
@@ -8,19 +9,21 @@ const AdminHome = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [aidatConfig, setAidatConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [u, e, a, c, p] = await Promise.all([
-          getUsers(), getExpenses(), getAnnouncements(), getComplaints(), getPayments()
+        const [u, e, a, c, p, cfg] = await Promise.all([
+          getUsers(), getExpenses(), getAnnouncements(), getComplaints(), getPayments(), getAidatConfig()
         ]);
         setUsers(u.data);
         setExpenses(e.data);
         setAnnouncements(a.data);
         setComplaints(c.data);
         setPayments(p.data);
+        setAidatConfig(cfg.data);
       } catch (err) {
         // sessiz hata — veri yüklenemedi
       } finally {
@@ -31,11 +34,15 @@ const AdminHome = () => {
   }, []);
 
   const totalExpense = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-  const totalCollection = payments.filter(p => p.isPaid).reduce((s, p) => s + (p.amount || 0), 0);
-  const totalDebt = payments.filter(p => !p.isPaid).reduce((s, p) => s + (p.amount || 0), 0);
+  // Payment kayıtları sadece ödeme yapıldığında oluşur → hepsi "ödendi"
+  const totalCollection = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  // Borç = ödeme yapmayan sakin sayısı × aidat tutarı
+  const residents = users.filter(u => u.role === 'resident');
+  const unpaidCount = residents.filter(u => !u.paid).length;
+  const paidCount = residents.filter(u => u.paid).length;
+  const totalDebt = unpaidCount * (aidatConfig?.amount || 0);
   const netBalance = totalCollection - totalExpense;
   const pendingComplaints = complaints.filter(c => c.status === 'pending').length;
-  const paidCount = payments.filter(p => p.isPaid).length;
 
   // Gider kategorileri
   const expByCategory = {};
@@ -45,9 +52,27 @@ const AdminHome = () => {
   });
 
   return (
-    <div className="ml-64 p-8 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
+    <div className="ml-64 p-8 min-h-screen relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+
+      {/* Animasyonlu arka plan */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-5%] right-[-5%] w-[500px] h-[500px] rounded-full anim-float-1"
+          style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.20) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div className="absolute bottom-[-10%] left-[5%] w-[450px] h-[450px] rounded-full anim-float-2"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full anim-float-3"
+          style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        <div className="absolute inset-0 opacity-[0.025]"
+          style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+      </div>
+
+      <div className="relative z-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-white">Yönetim Paneli</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-extrabold text-white">Yönetim Paneli</h1>
+          <AnnouncementBell basePath="/admin" dark={true} />
+        </div>
         <p className="text-slate-400 mt-1">Genel bakış ve istatistikler</p>
       </div>
 
@@ -74,7 +99,7 @@ const AdminHome = () => {
                 <ArrowUpRight size={16} className="text-green-500" />
               </div>
               <p className="text-xs text-gray-500 font-medium">Ödeme Yapan</p>
-              <h3 className="text-xl font-bold text-gray-800">{paidCount} / {payments.length}</h3>
+              <h3 className="text-xl font-bold text-gray-800">{paidCount} / {residents.length}</h3>
             </div>
 
             <div className="stat-card group">
@@ -105,7 +130,7 @@ const AdminHome = () => {
           {/* Orta Bölüm */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* Gider Dağılımı */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="lg:col-span-2 card p-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Gider Dağılımı</h2>
               {Object.keys(expByCategory).length === 0 ? (
                 <p className="text-gray-400 text-sm italic">Henüz gider kaydı yok</p>
@@ -131,7 +156,7 @@ const AdminHome = () => {
             </div>
 
             {/* Sakin İstatistikleri */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="card p-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Sakin İstatistikleri</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -139,7 +164,7 @@ const AdminHome = () => {
                     <div className="p-2 bg-blue-100 rounded-lg"><Users size={18} className="text-blue-600" /></div>
                     <span className="text-sm text-gray-600">Toplam Sakin</span>
                   </div>
-                  <span className="text-lg font-bold text-gray-800">{users.length}</span>
+                  <span className="text-lg font-bold text-gray-800">{residents.length}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -153,7 +178,7 @@ const AdminHome = () => {
                     <div className="p-2 bg-red-100 rounded-lg"><AlertCircle size={18} className="text-red-600" /></div>
                     <span className="text-sm text-gray-600">Ödeme Yapmayan</span>
                   </div>
-                  <span className="text-lg font-bold text-red-600">{payments.length - paidCount}</span>
+                  <span className="text-lg font-bold text-red-600">{unpaidCount}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -169,7 +194,7 @@ const AdminHome = () => {
           {/* Alt Bölüm */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Son Duyurular */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <Bell size={18} className="text-blue-600" /> Son Duyurular
@@ -194,7 +219,7 @@ const AdminHome = () => {
             </div>
 
             {/* Son Talepler */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <AlertCircle size={18} className="text-yellow-600" /> Son Talepler
@@ -226,6 +251,7 @@ const AdminHome = () => {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 };

@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BizimSite.API", "BizimSite.API\BizimSite.API.csproj", "{2BC2B1BF-3768-0C64-12BF-2A5B16CE018D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2BC2B1BF-3768-0C64-12BF-2A5B16CE018D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BC2B1BF-3768-0C64-12BF-2A5B16CE018D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BC2B1BF-3768-0C64-12BF-2A5B16CE018D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BC2B1BF-3768-0C64-12BF-2A5B16CE018D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6EF9FC77-DA7A-4124-9591-C192181BA7FC}
+	EndGlobalSection
+EndGlobal

@@ -1,3 +1,4 @@
+import AnnouncementBell from '../components/AnnouncementBell';
 import React, { useEffect, useState } from 'react';
 import { Wallet, Bell, User, CreditCard, AlertTriangle, Calendar, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -42,7 +43,10 @@ const ResidentDashboard = () => {
   return (
     <div className="ml-64 p-8 bg-slate-50 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Hoş Geldin, {currentUser.name}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-800">Hoş Geldin, {currentUser.name}</h1>
+          <AnnouncementBell basePath="/resident" dark={false} />
+        </div>
         <p className="text-slate-500">{currentUser.block ? currentUser.block + ' Blok / No: ' + currentUser.no : 'Sakin paneli'}</p>
       </div>
 
@@ -61,8 +65,11 @@ const ResidentDashboard = () => {
                   {isPaid ? 'Ödendi' : 'Borçlu'}
                 </span>
               </div>
-              <h3 className="text-slate-500 text-sm font-medium">Aylık Aidat</h3>
-              <p className="text-2xl font-bold text-slate-800">{monthlyAidat > 0 ? `₺${monthlyAidat.toLocaleString('tr-TR')}` : '₺0'}</p>
+              <h3 className="text-slate-500 text-sm font-medium">{isPaid ? 'Aylık Aidat' : 'Borcum'}</h3>
+              <p className={`text-2xl font-bold ${isPaid ? 'text-slate-800' : 'text-red-600'}`}>
+                {monthlyAidat > 0 ? `₺${monthlyAidat.toLocaleString('tr-TR')}` : '—'}
+              </p>
+              {isPaid && <p className="text-xs text-green-500 mt-1 font-medium">Bu ay ödendi ✓</p>}
               {!isPaid && monthlyAidat > 0 && (
                 <button onClick={() => navigate('/resident/payments')}
                   className="mt-4 w-full btn-primary justify-center text-sm py-2">

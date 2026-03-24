@@ -6,6 +6,7 @@ public class BorrowRequest
     public User? User { get; set; }
     public string ItemName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string Duration { get; set; } = "Belirsiz";
     public string Status { get; set; } = "open";
     public int TenantId { get; set; }
     public Tenant? Tenant { get; set; }

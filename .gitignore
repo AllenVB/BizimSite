@@ -1,0 +1,8 @@
+# Build çıktıları
+BizimSite.API/bin/
+BizimSite.API/obj/
+BizimSite/dist/
+BizimSite/node_modules/
+BizimSite/.claude/
+*.user
+.env
