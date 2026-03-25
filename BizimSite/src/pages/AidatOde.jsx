@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { CreditCard, CheckCircle, Shield, ChevronRight, AlertCircle, Calendar, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAidatConfig, getExpenses, makePayment, getPayments } from '../services/api';
@@ -61,15 +61,15 @@ const AidatOde = () => {
   const monthName = config?.currentMonth || new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
 
   if (step === 3) return (
-    <div className="ml-64 min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4 md:p-8">
       <div className="bg-white rounded-3xl shadow-xl p-12 text-center max-w-md w-full">
         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={48} className="text-green-500" />
+          <CheckCircle size={28} className="text-green-500" />
         </div>
         <h1 className="text-2xl font-bold text-slate-800 mb-2">Ödeme Başarılı!</h1>
         <p className="text-slate-500 mb-4">{monthName} aidatınız alındı.</p>
         <div className="bg-green-50 rounded-2xl p-4 mb-4">
-          <p className="text-3xl font-bold text-green-600">₺{monthlyAidat.toLocaleString('tr-TR')}</p>
+          <p className="text-2xl md:text-3xl font-bold text-green-600">₺{monthlyAidat.toLocaleString('tr-TR')}</p>
         </div>
         <p className="text-xs text-slate-400">Yönlendiriliyorsunuz...</p>
       </div>
@@ -77,17 +77,17 @@ const AidatOde = () => {
   );
 
   return (
-    <div className="ml-64 min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Aidat Öde</h1>
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Aidat Öde</h1>
           <p className="text-slate-500 mt-1 flex items-center gap-2"><Calendar size={16} /> {monthName} dönemi</p>
         </div>
 
         {isPaid ? (
           <div className="bg-white rounded-3xl shadow-sm border border-green-100 p-10 text-center">
             <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <CheckCircle size={40} className="text-green-500" />
+              <CheckCircle size={24} className="text-green-500" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Bu Ay Ödendi ✓</h2>
             <p className="text-slate-500">{monthName} aidat ödemeniz tamamlanmıştır.</p>

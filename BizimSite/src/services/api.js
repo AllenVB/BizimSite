@@ -89,6 +89,8 @@ export const createTenant = (data) => api.post('/superadmin/tenants', data);
 export const updateTenant = (id, data) => api.put(`/superadmin/tenants/${id}`, data);
 export const deleteTenant = (id) => api.delete(`/superadmin/tenants/${id}`);
 export const getTenantUsers = (id) => api.get(`/superadmin/tenants/${id}/users`);
+export const getAllSuperAdminUsers = () => api.get('/superadmin/users');
+export const resetUserPassword = (id, newPassword) => api.put(`/superadmin/users/${id}/reset-password`, { newPassword });
 export const seedSuperAdmin = () => api.post('/superadmin/seed');
 
 export default api;

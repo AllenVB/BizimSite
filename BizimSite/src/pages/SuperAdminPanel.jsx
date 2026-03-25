@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2, Star, Zap, Crown } from "lucide-react";
-import { getSuperAdminDashboard, getTenants, createTenant, updateTenant, deleteTenant, getTenantUsers } from "../services/api";
+﻿import React, { useState, useEffect } from "react";
+import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2, Star, Zap, Crown, KeyRound, Search } from "lucide-react";
+import { getSuperAdminDashboard, getTenants, createTenant, updateTenant, deleteTenant, getTenantUsers, getAllSuperAdminUsers, resetUserPassword } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const SuperAdminPanel = () => {
@@ -14,6 +14,12 @@ const SuperAdminPanel = () => {
   const [editTenant, setEditTenant] = useState(null);
   const [expandedTenant, setExpandedTenant] = useState(null);
   const [tenantUsers, setTenantUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [resetModal, setResetModal] = useState(null); // { user }
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "", slug: "", address: "", phone: "", planType: "basic",
     adminName: "", adminEmail: "", adminPassword: ""
@@ -88,6 +94,37 @@ const SuperAdminPanel = () => {
     }
   };
 
+  const loadAllUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const res = await getAllSuperAdminUsers();
+      setAllUsers(res.data);
+    } catch (e) {
+      setError("Kullanıcılar yüklenemedi");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleTabChange = (key) => {
+    setTab(key);
+    if (key === "users" && allUsers.length === 0) loadAllUsers();
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    try {
+      await resetUserPassword(resetModal.user.id, resetPassword);
+      setResetModal(null);
+      setResetPassword("");
+    } catch (e) {
+      setError(e.response?.data?.message || "Şifre sıfırlanamadı");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("currentUser");
@@ -117,8 +154,8 @@ const SuperAdminPanel = () => {
 
       {/* Nav Tabs */}
       <div className="bg-white border-b px-6 flex gap-1">
-        {[["dashboard", "Dashboard"], ["tenants", "Binalar"], ["plans", "Planlar"]].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)}
+        {[["dashboard", "Dashboard"], ["tenants", "Binalar"], ["users", "Kullanıcılar"], ["plans", "Planlar"]].map(([key, label]) => (
+          <button key={key} onClick={() => handleTabChange(key)}
             className={"px-4 py-3 text-sm font-medium border-b-2 transition " + (tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800")}>
             {label}
           </button>
@@ -139,6 +176,139 @@ const SuperAdminPanel = () => {
           </div>
         ) : tab === "plans" ? (
           <PlansTab />
+        ) : tab === "users" ? (
+          <div>
+            <div className="flex items-center justify-between mb-4 gap-3">
+              <h2 className="text-lg font-bold text-gray-800 whitespace-nowrap">Tüm Kullanıcılar ({allUsers.length})</h2>
+              <div className="relative flex-1 max-w-xs">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  className="input-field pl-9 text-sm"
+                  placeholder="İsim, e-posta, bina ara..."
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                />
+              </div>
+              <button onClick={loadAllUsers} className="btn-secondary text-sm whitespace-nowrap">Yenile</button>
+            </div>
+
+            {usersLoading ? (
+              <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-indigo-600" /></div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 font-semibold uppercase tracking-wide">
+                        <th className="text-left px-4 py-3">İsim</th>
+                        <th className="text-left px-4 py-3">E-posta</th>
+                        <th className="text-left px-4 py-3">Telefon</th>
+                        <th className="text-left px-4 py-3">Bina</th>
+                        <th className="text-left px-4 py-3">Blok / Daire</th>
+                        <th className="text-left px-4 py-3">Rol</th>
+                        <th className="text-left px-4 py-3">Aidat</th>
+                        <th className="text-left px-4 py-3">Kayıt</th>
+                        <th className="text-center px-4 py-3">Şifre</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {allUsers
+                        .filter(u => {
+                          const q = userSearch.toLowerCase();
+                          return !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.tenantName?.toLowerCase().includes(q);
+                        })
+                        .map(u => (
+                          <tr key={u.id} className="hover:bg-indigo-50/40 transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0">
+                                  {(u.name || u.email || '?').charAt(0).toUpperCase()}
+                                </div>
+                                <span className="font-medium text-gray-800">{u.name || '—'}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500">{u.email}</td>
+                            <td className="px-4 py-3 text-gray-500">{u.phone || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-md">{u.tenantName}</span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500">
+                              {u.block && u.block !== '-' ? `${u.block} Blok / ${u.no}` : '—'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                u.role === 'admin' ? 'bg-blue-100 text-blue-700' :
+                                u.role === 'kapici' ? 'bg-orange-100 text-orange-700' :
+                                'bg-gray-100 text-gray-600'
+                              }`}>{u.role}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                {u.paid ? 'Ödedi' : 'Borçlu'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-400 text-xs">
+                              {new Date(u.createdAt).toLocaleDateString('tr-TR')}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => { setResetModal({ user: u }); setResetPassword(""); }}
+                                className="btn-icon hover:text-indigo-600 hover:bg-indigo-50"
+                                title="Şifre Sıfırla"
+                              >
+                                <KeyRound size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      {allUsers.length === 0 && (
+                        <tr><td colSpan={9} className="px-4 py-16 text-center text-gray-400">
+                          <Users size={36} className="mx-auto mb-3 opacity-30" />
+                          <p>Kullanıcı bulunamadı.</p>
+                        </td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Şifre Sıfırla Modal */}
+            {resetModal && (
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setResetModal(null)}>
+                <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-gray-800">Şifre Sıfırla</h3>
+                    <button onClick={() => setResetModal(null)} className="btn-icon"><X size={16} /></button>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4">
+                    <span className="font-semibold text-gray-700">{resetModal.user.name}</span> ({resetModal.user.email}) kullanıcısı için yeni şifre belirle.
+                  </p>
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Yeni Şifre</label>
+                      <input
+                        required
+                        minLength={4}
+                        type="text"
+                        className="input-field"
+                        placeholder="Yeni şifre girin"
+                        value={resetPassword}
+                        onChange={e => setResetPassword(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <button type="button" onClick={() => setResetModal(null)} className="btn-secondary">İptal</button>
+                      <button type="submit" disabled={resetLoading} className="btn-primary bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200">
+                        {resetLoading ? <Loader2 size={14} className="animate-spin" /> : <><KeyRound size={14} /> Sıfırla</>}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
         ) : tab === "dashboard" ? (
           <div>
             <h2 className="text-lg font-bold text-gray-800 mb-4">Genel Bakış</h2>
@@ -268,7 +438,7 @@ const SuperAdminPanel = () => {
             <div className="space-y-3">
               {tenants.length === 0 && !showForm && (
                 <div className="text-center py-16 text-gray-400">
-                  <Building2 size={40} className="mx-auto mb-3 opacity-30" />
+                  <Building2 size={24} className="mx-auto mb-3 opacity-30" />
                   <p>Henüz bina yok. Yeni bina ekleyin.</p>
                 </div>
               )}
@@ -365,7 +535,7 @@ const PlansTab = () => {
       <h2 className="text-lg font-bold text-gray-800 mb-6">Plan Karşılaştırması</h2>
 
       {/* Plan Kartları */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 md:mb-8">
         {plans.map(({ key, label, price, period, icon: Icon, color, highlight, desc }) => (
           <div key={key} className={`rounded-xl border-2 p-6 flex flex-col ${
             highlight
@@ -383,7 +553,7 @@ const PlansTab = () => {
             <h3 className="text-xl font-bold text-gray-800">{label}</h3>
             <p className="text-sm text-gray-500 mt-1 mb-4">{desc}</p>
             <div className="mt-auto">
-              <span className="text-3xl font-extrabold text-gray-900">{price}</span>
+              <span className="text-2xl md:text-3xl font-extrabold text-gray-900">{price}</span>
               <span className="text-gray-400 text-sm">{period}</span>
             </div>
           </div>
@@ -392,6 +562,7 @@ const PlansTab = () => {
 
       {/* Özellik Tablosu */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
@@ -414,6 +585,7 @@ const PlansTab = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <p className="mt-4 text-xs text-gray-400 text-center">

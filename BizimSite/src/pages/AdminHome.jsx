@@ -1,7 +1,40 @@
-import { useState, useEffect } from 'react';
-import { Users, TrendingUp, TrendingDown, AlertCircle, CreditCard, Wallet, Bell, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { Users, TrendingUp, TrendingDown, AlertCircle, CreditCard, Wallet, Bell, ArrowUpRight, ArrowDownRight, Loader2, X } from 'lucide-react';
 import { getUsers, getExpenses, getAnnouncements, getComplaints, getPayments, getAidatConfig } from '../services/api';
 import AnnouncementBell from '../components/AnnouncementBell';
+
+const StatModal = ({ modal, onClose }) => {
+  if (!modal) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[75vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+          <h3 className="font-bold text-slate-800">{modal.title}</h3>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 transition"><X size={18} /></button>
+        </div>
+        <div className="overflow-y-auto flex-1 divide-y divide-slate-50">
+          {modal.items.length === 0 ? (
+            <div className="p-10 text-center text-slate-400 text-sm">Veri yok</div>
+          ) : modal.items.map((item, i) => (
+            <div key={i} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${item.color || 'bg-blue-500'}`}>
+                  {item.avatar}
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800 text-sm">{item.title}</p>
+                  {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}
+                </div>
+              </div>
+              {item.badge && <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${item.badgeClass}`}>{item.badge}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminHome = () => {
   const [users, setUsers] = useState([]);
@@ -11,6 +44,7 @@ const AdminHome = () => {
   const [payments, setPayments] = useState([]);
   const [aidatConfig, setAidatConfig] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -52,7 +86,7 @@ const AdminHome = () => {
   });
 
   return (
-    <div className="ml-64 p-8 min-h-screen relative overflow-hidden"
+    <div className="p-4 md:p-8 min-h-screen relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
 
       {/* Animasyonlu arka plan */}
@@ -68,9 +102,9 @@ const AdminHome = () => {
       </div>
 
       <div className="relative z-10">
-      <div className="mb-8">
+      <div className="mb-4 md:mb-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-extrabold text-white">Yönetim Paneli</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white">Yönetim Paneli</h1>
           <AnnouncementBell basePath="/admin" dark={true} />
         </div>
         <p className="text-slate-400 mt-1">Genel bakış ve istatistikler</p>
@@ -83,8 +117,18 @@ const AdminHome = () => {
       ) : (
         <>
           {/* Üst Kartlar */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="stat-card group">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 md:mb-8">
+            <div className="stat-card group cursor-pointer" onClick={() => setModal({
+              title: 'Tahsilat Detayı',
+              items: payments.map(p => ({
+                avatar: (p.userName || p.userEmail || '?').charAt(0).toUpperCase(),
+                color: 'bg-blue-500',
+                title: p.userName || p.userEmail || 'Bilinmiyor',
+                subtitle: new Date(p.paidAt || p.createdAt).toLocaleDateString('tr-TR'),
+                badge: `₺${(p.amount || 0).toLocaleString('tr-TR')}`,
+                badgeClass: 'bg-blue-100 text-blue-700'
+              }))
+            })}>
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-blue-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><Wallet size={20} className="text-blue-600" /></div>
                 <ArrowUpRight size={16} className="text-green-500" />
@@ -93,7 +137,17 @@ const AdminHome = () => {
               <h3 className="text-xl font-bold text-gray-800">₺{totalCollection.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className="stat-card group">
+            <div className="stat-card group cursor-pointer" onClick={() => setModal({
+              title: `Ödeme Yapanlar (${paidCount})`,
+              items: residents.filter(u => u.paid).map(u => ({
+                avatar: (u.name || u.email || '?').charAt(0).toUpperCase(),
+                color: 'bg-green-500',
+                title: u.name || u.email,
+                subtitle: `${u.block ? u.block + ' Blok' : ''} ${u.no ? 'Daire ' + u.no : ''}`.trim() || 'Daire bilgisi yok',
+                badge: 'Ödedi',
+                badgeClass: 'bg-green-100 text-green-700'
+              }))
+            })}>
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-green-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><TrendingUp size={20} className="text-green-600" /></div>
                 <ArrowUpRight size={16} className="text-green-500" />
@@ -102,7 +156,17 @@ const AdminHome = () => {
               <h3 className="text-xl font-bold text-gray-800">{paidCount} / {residents.length}</h3>
             </div>
 
-            <div className="stat-card group">
+            <div className="stat-card group cursor-pointer" onClick={() => setModal({
+              title: `Borçlu Daireler (${unpaidCount})`,
+              items: residents.filter(u => !u.paid).map(u => ({
+                avatar: (u.name || u.email || '?').charAt(0).toUpperCase(),
+                color: 'bg-red-500',
+                title: u.name || u.email,
+                subtitle: `${u.block ? u.block + ' Blok' : ''} ${u.no ? 'Daire ' + u.no : ''}`.trim() || 'Daire bilgisi yok',
+                badge: `₺${(aidatConfig?.amount || 0).toLocaleString('tr-TR')}`,
+                badgeClass: 'bg-red-100 text-red-700'
+              }))
+            })}>
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-red-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><AlertCircle size={20} className="text-red-600" /></div>
                 <ArrowDownRight size={16} className="text-red-500" />
@@ -111,7 +175,17 @@ const AdminHome = () => {
               <h3 className="text-xl font-bold text-gray-800">₺{totalDebt.toLocaleString('tr-TR')}</h3>
             </div>
 
-            <div className="stat-card group">
+            <div className="stat-card group cursor-pointer" onClick={() => setModal({
+              title: 'Gider Kalemleri',
+              items: expenses.map(e => ({
+                avatar: (e.category || 'D').charAt(0).toUpperCase(),
+                color: 'bg-orange-500',
+                title: e.description || e.category || 'Gider',
+                subtitle: e.category,
+                badge: `₺${(e.amount || 0).toLocaleString('tr-TR')}`,
+                badgeClass: 'bg-orange-100 text-orange-700'
+              }))
+            })}>
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-orange-50 rounded-lg group-hover:scale-110 transition-transform duration-200"><TrendingDown size={20} className="text-orange-600" /></div>
                 <ArrowDownRight size={16} className="text-orange-500" />
@@ -128,7 +202,7 @@ const AdminHome = () => {
           </div>
 
           {/* Orta Bölüm */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4 md:mb-8">
             {/* Gider Dağılımı */}
             <div className="lg:col-span-2 card p-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Gider Dağılımı</h2>
@@ -159,28 +233,66 @@ const AdminHome = () => {
             <div className="card p-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Sakin İstatistikleri</h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors" onClick={() => setModal({
+                  title: `Tüm Sakinler (${residents.length})`,
+                  items: residents.map(u => ({
+                    avatar: (u.name || u.email || '?').charAt(0).toUpperCase(),
+                    color: 'bg-blue-500',
+                    title: u.name || u.email,
+                    subtitle: `${u.block ? u.block + ' Blok' : ''} ${u.no ? 'Daire ' + u.no : ''}`.trim() || 'Daire bilgisi yok'
+                  }))
+                })}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg"><Users size={18} className="text-blue-600" /></div>
                     <span className="text-sm text-gray-600">Toplam Sakin</span>
                   </div>
                   <span className="text-lg font-bold text-gray-800">{residents.length}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-green-50 transition-colors" onClick={() => setModal({
+                  title: `Ödeme Yapanlar (${paidCount})`,
+                  items: residents.filter(u => u.paid).map(u => ({
+                    avatar: (u.name || u.email || '?').charAt(0).toUpperCase(),
+                    color: 'bg-green-500',
+                    title: u.name || u.email,
+                    subtitle: `${u.block ? u.block + ' Blok' : ''} ${u.no ? 'Daire ' + u.no : ''}`.trim() || 'Daire bilgisi yok',
+                    badge: 'Ödedi',
+                    badgeClass: 'bg-green-100 text-green-700'
+                  }))
+                })}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-green-100 rounded-lg"><CreditCard size={18} className="text-green-600" /></div>
                     <span className="text-sm text-gray-600">Ödeme Yapan</span>
                   </div>
                   <span className="text-lg font-bold text-green-600">{paidCount}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-red-50 transition-colors" onClick={() => setModal({
+                  title: `Ödeme Yapmayanlar (${unpaidCount})`,
+                  items: residents.filter(u => !u.paid).map(u => ({
+                    avatar: (u.name || u.email || '?').charAt(0).toUpperCase(),
+                    color: 'bg-red-500',
+                    title: u.name || u.email,
+                    subtitle: `${u.block ? u.block + ' Blok' : ''} ${u.no ? 'Daire ' + u.no : ''}`.trim() || 'Daire bilgisi yok',
+                    badge: 'Borçlu',
+                    badgeClass: 'bg-red-100 text-red-700'
+                  }))
+                })}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-100 rounded-lg"><AlertCircle size={18} className="text-red-600" /></div>
                     <span className="text-sm text-gray-600">Ödeme Yapmayan</span>
                   </div>
                   <span className="text-lg font-bold text-red-600">{unpaidCount}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors" onClick={() => setModal({
+                  title: `Bekleyen Talepler (${pendingComplaints})`,
+                  items: complaints.filter(c => c.status === 'pending').map(c => ({
+                    avatar: (c.userName || c.title || '?').charAt(0).toUpperCase(),
+                    color: 'bg-yellow-500',
+                    title: c.title,
+                    subtitle: c.isAnonymous ? 'Anonim' : c.userName,
+                    badge: 'Bekliyor',
+                    badgeClass: 'bg-yellow-100 text-yellow-700'
+                  }))
+                })}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-yellow-100 rounded-lg"><AlertCircle size={18} className="text-yellow-600" /></div>
                     <span className="text-sm text-gray-600">Bekleyen Talep</span>
@@ -252,6 +364,7 @@ const AdminHome = () => {
         </>
       )}
       </div>
+      <StatModal modal={modal} onClose={() => setModal(null)} />
     </div>
   );
 };

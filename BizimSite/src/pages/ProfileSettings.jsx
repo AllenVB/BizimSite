@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Save, X } from 'lucide-react';
 
 const ProfileSettings = () => {
@@ -21,11 +21,11 @@ const ProfileSettings = () => {
   };
 
   return (
-    <div className="ml-64 p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-slate-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-800 mb-8">Profil Ayarları</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4 md:mb-8">Profil Ayarları</h1>
         
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 md:p-8">
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Ad Soyad</label>

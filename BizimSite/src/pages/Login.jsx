@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Building2, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
@@ -75,7 +75,7 @@ const Login = () => {
           }}>
 
           {/* Üst başlık */}
-          <div className="p-8 text-center text-white"
+          <div className="p-4 md:p-8 text-center text-white"
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.85) 0%, rgba(99,102,241,0.85) 100%)', borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
             <div className="inline-flex p-3.5 rounded-2xl mb-4"
               style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(10px)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 16px rgba(0,0,0,0.2)' }}>
@@ -86,7 +86,7 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <div className="p-8" style={{ background: 'rgba(255,255,255,0.97)' }}>
+          <div className="p-4 md:p-8" style={{ background: 'rgba(255,255,255,0.97)' }}>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">E-posta</label>

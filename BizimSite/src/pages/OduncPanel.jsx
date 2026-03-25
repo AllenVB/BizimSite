@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Package, Plus, X, CheckCircle, Clock, User, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { getBorrowRequests, createBorrowRequest, respondBorrow } from '../services/api';
 
@@ -21,6 +21,9 @@ const OduncPanel = () => {
   const [form, setForm] = useState({ item: '', description: '', duration: '1 gün' });
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const isAdmin = currentUser.role === 'admin';
+  const formRef = useRef(null);
+
+  useEffect(() => { if (showForm && formRef.current) { setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); } }, [showForm]);
 
   useEffect(() => { loadRequests(); }, []);
 
@@ -63,12 +66,12 @@ const OduncPanel = () => {
   const openCount = requests.filter(r => r.status === 'open').length;
 
   return (
-    <div className="ml-64 min-h-screen bg-gradient-to-br from-slate-50 to-amber-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-amber-50 p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 md:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
               <Package className="text-amber-500" /> Ödünç Paneli
             </h1>
             <p className="text-slate-500 mt-1">Komşulardan ödünç alın veya verin · {openCount} açık istek</p>
@@ -88,7 +91,7 @@ const OduncPanel = () => {
 
         {/* Yeni istek formu */}
         {showForm && (
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
+          <form ref={formRef} onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
             <h2 className="font-bold text-slate-800 mb-4">Yeni Ödünç İsteği</h2>
             <div className="space-y-4">
               <div>
@@ -130,7 +133,7 @@ const OduncPanel = () => {
           </div>
         ) : requests.length === 0 ? (
           <div className="bg-white rounded-2xl p-16 text-center border border-slate-100">
-            <Package size={48} className="text-slate-300 mx-auto mb-4" />
+            <Package size={28} className="text-slate-300 mx-auto mb-4" />
             <p className="text-slate-400">Henüz ödünç isteği yok</p>
             <p className="text-slate-400 text-sm mt-1">İlk isteği sen oluştur!</p>
           </div>

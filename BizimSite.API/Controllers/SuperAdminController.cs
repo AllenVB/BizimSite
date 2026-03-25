@@ -144,6 +144,35 @@ public class SuperAdminController : ControllerBase
         return Ok(new { totalTenants, activeTenants, totalUsers, totalPayments, tenantStats });
     }
 
+    // Tüm kullanıcıları listele (tüm binalar dahil)
+    [HttpGet("users")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var users = await _db.Users
+            .Include(u => u.Tenant)
+            .Where(u => !u.IsSuperAdmin)
+            .OrderBy(u => u.TenantId).ThenBy(u => u.Name)
+            .Select(u => new SuperAdminUserResponse(
+                u.Id, u.Name, u.Email, u.Phone ?? "", u.Block ?? "", u.No ?? "",
+                u.Role, u.Type ?? "", u.Paid, u.CreatedAt,
+                u.TenantId, u.Tenant != null ? u.Tenant.Name : "—"
+            )).ToListAsync();
+        return Ok(users);
+    }
+
+    // Kullanıcı şifresini sıfırla
+    [HttpPut("users/{id}/reset-password")]
+    public async Task<IActionResult> ResetUserPassword(int id, ResetPasswordRequest req)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+        if (string.IsNullOrWhiteSpace(req.NewPassword) || req.NewPassword.Length < 4)
+            return BadRequest(new { message = "Şifre en az 4 karakter olmalı" });
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Şifre güncellendi" });
+    }
+
     // SuperAdmin seed
     [HttpPost("seed")]
     [AllowAnonymous]

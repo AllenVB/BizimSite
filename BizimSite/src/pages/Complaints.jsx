@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, Plus, X, CheckCircle, Clock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { getComplaints, createComplaint, updateComplaint } from '../services/api';
 
@@ -17,6 +17,9 @@ const Complaints = ({ isAdmin }) => {
   const [loading, setLoading] = useState(true);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const canManage = currentUser.role === 'admin' || currentUser.role === 'kapici';
+  const formRef = useRef(null);
+
+  useEffect(() => { if (showForm && formRef.current) { setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); } }, [showForm]);
 
   const load = () => {
     getComplaints().then(r => setComplaints(r.data)).catch(console.error).finally(() => setLoading(false));
@@ -43,11 +46,11 @@ const Complaints = ({ isAdmin }) => {
   };
 
   return (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 md:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
               <AlertTriangle className="text-amber-500" /> {canManage ? 'Talepler' : 'Taleplerim'}
             </h1>
             <p className="text-slate-500 mt-1">{canManage ? 'Tüm sakin talepleri' : 'Oluşturduğunuz talepler'}</p>
@@ -62,7 +65,7 @@ const Complaints = ({ isAdmin }) => {
         </div>
 
         {showForm && !canManage && (
-          <form onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
+          <form ref={formRef} onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-1 block">Başlık</label>
               <input className="w-full px-4 py-2.5 border border-slate-200 rounded-xl outline-none focus:border-blue-400"
@@ -113,7 +116,7 @@ const Complaints = ({ isAdmin }) => {
           <div className="text-center py-16 text-slate-400">Yükleniyor...</div>
         ) : complaints.length === 0 ? (
           <div className="text-center py-16">
-            <AlertTriangle size={48} className="text-slate-300 mx-auto mb-4" />
+            <AlertTriangle size={28} className="text-slate-300 mx-auto mb-4" />
             <p className="text-slate-400">Talep bulunamadı</p>
           </div>
         ) : (

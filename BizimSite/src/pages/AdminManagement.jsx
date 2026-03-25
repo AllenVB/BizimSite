@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Shield, Crown, Mail, Phone, Home, MessageSquare, Send, X, CheckCircle } from 'lucide-react';
 import { getAdmins, sendMessage } from '../services/api';
 
@@ -38,16 +38,16 @@ const AdminManagement = ({ isResident = false }) => {
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   if (loading) return (
-    <div className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <p className="text-slate-400">Yükleniyor...</p>
     </div>
   );
 
   return (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
             <Shield className="text-blue-500" /> Yöneticiler
           </h1>
           <p className="text-slate-500 mt-1">
@@ -58,7 +58,7 @@ const AdminManagement = ({ isResident = false }) => {
         <div className="grid gap-4">
           {admins.length === 0 ? (
             <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
-              <Shield size={40} className="text-slate-300 mx-auto mb-3" />
+              <Shield size={24} className="text-slate-300 mx-auto mb-3" />
               <p className="text-slate-400">Henüz yönetici bilgisi yok</p>
             </div>
           ) : admins.map((admin, i) => (
@@ -112,7 +112,7 @@ const AdminManagement = ({ isResident = false }) => {
             <form onSubmit={handleSendMsg} className="p-5 space-y-4">
               {sent ? (
                 <div className="flex flex-col items-center py-6 gap-3">
-                  <CheckCircle size={48} className="text-green-500" />
+                  <CheckCircle size={28} className="text-green-500" />
                   <p className="font-semibold text-slate-700">Mesajınız gönderildi!</p>
                   <p className="text-sm text-slate-400">Sohbet panelinde görüntülenebilir</p>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Trash2, CheckCircle, Clock, Building2, Loader2, X } from 'lucide-react';
 import { getGarbage, markGarbage, unmarkGarbage, collectGarbage } from '../services/api';
 
@@ -55,16 +55,13 @@ const CopTakibi = () => {
     }
   };
 
-  const todayRecords = records.filter(r => {
-    if (!r.markedAt) return false;
-    return new Date(r.markedAt).toLocaleDateString('tr-TR') === today;
-  });
+  const todayRecords = records;
 
   return (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="p-3 bg-green-100 rounded-2xl"><Trash2 size={28} className="text-green-600" /></div>
+        <div className="mb-4 md:mb-8 flex items-center gap-3">
+          <div className="p-2 md:p-3 bg-green-100 rounded-xl md:rounded-2xl"><Trash2 size={28} className="text-green-600" /></div>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Çöp Takibi</h1>
             <p className="text-slate-500 text-sm">{today} — Günlük çöp durumu</p>
@@ -134,7 +131,7 @@ const CopTakibi = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-slate-800">{r.userName}</p>
-                    <p className="text-sm text-slate-400">{r.userBlock ? r.userBlock + ' Blok, Daire ' + r.userNo : 'Daire bilgisi yok'}</p>
+                    <p className="text-sm text-slate-400">{r.block ? r.block + ' Blok, Daire ' + r.no : 'Daire bilgisi yok'}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     {r.isCollected ? (

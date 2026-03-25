@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Building2, Plus, Trash2, Edit2, X, Save, Home, Users, Phone, Mail, CreditCard, ChevronRight } from 'lucide-react';
 import { getBlocks, createBlock, updateBlock, deleteBlock, getUsers } from '../services/api';
 
@@ -14,6 +14,9 @@ const BlockManagement = () => {
   const [loading, setLoading] = useState(true);
   const [blockResidentsModal, setBlockResidentsModal] = useState(null); // block nesnesi
   const [selectedResident, setSelectedResident] = useState(null);       // sakin nesnesi
+  const formRef = useRef(null);
+
+  useEffect(() => { if ((showForm || editingId) && formRef.current) { setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); } }, [showForm, editingId]);
 
   const load = async () => {
     try {
@@ -72,16 +75,16 @@ const BlockManagement = () => {
   const occupiedCount = users.length;
 
   if (loading) return (
-    <div className="ml-64 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 flex items-center justify-center">
       <p className="text-slate-400">Yükleniyor...</p>
     </div>
   );
 
   return (
-    <div className="ml-64 p-8 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 md:p-8 min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
+      <div className="flex items-center justify-between mb-4 md:mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-white flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white flex items-center gap-3">
             <Building2 className="text-blue-400" /> Blok & Daire Yönetimi
           </h1>
           <p className="text-slate-400 mt-1">Blokları ve daireleri yönetin</p>
@@ -95,7 +98,7 @@ const BlockManagement = () => {
       </div>
 
       {/* Özet Kartlar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 md:mb-8">
         <div className="stat-card group">
           <div className="p-2 bg-blue-50 rounded-lg w-fit mb-2 group-hover:scale-110 transition-transform duration-200"><Building2 size={20} className="text-blue-600" /></div>
           <p className="text-xs text-gray-500">Toplam Blok</p>
@@ -120,7 +123,7 @@ const BlockManagement = () => {
 
       {/* Form */}
       {(showForm || editingId) && (
-        <form onSubmit={editingId ? handleEdit : handleAdd} className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
+        <form ref={formRef} onSubmit={editingId ? handleEdit : handleAdd} className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-4 md:mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-4">{editingId ? 'Blok Düzenle' : 'Yeni Blok Ekle'}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -158,7 +161,7 @@ const BlockManagement = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {blocks.length === 0 ? (
           <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-slate-100">
-            <Building2 size={48} className="text-slate-300 mx-auto mb-4" />
+            <Building2 size={28} className="text-slate-300 mx-auto mb-4" />
             <p className="text-slate-400 text-lg">Henüz blok eklenmedi</p>
             <p className="text-slate-300 text-sm mt-1">Yukarıdaki butonu kullanarak blok ekleyin</p>
           </div>

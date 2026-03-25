@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════
+   SCROLLBAR GİZLE — scroll çalışır, çubuk görünmez
+═══════════════════════════════════════════════════════════ */
+* {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge */
+}
+*::-webkit-scrollbar {
+  display: none;                /* Chrome / Safari / Opera */
+}
+
+/* ═══════════════════════════════════════════════════════════
    KEYFRAME ANİMASYONLARI
 ═══════════════════════════════════════════════════════════ */
 
@@ -42,6 +53,10 @@
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0);    }
 }
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0.5; }
+  to   { transform: translateX(0);    opacity: 1;   }
+}
 
 /* Animasyon yardımcı sınıfları */
 .anim-float-1   { animation: float-1  14s ease-in-out infinite; }
@@ -52,7 +67,8 @@
 .anim-pulse     { animation: pulse-soft 5s ease-in-out infinite; }
 .anim-fade-up   { animation: fade-up  0.5s ease-out forwards; }
 .anim-spin-slow { animation: spin-slow 32s linear infinite; }
-.page-enter     { animation: page-enter 0.22s ease-out both; }
+.page-enter              { animation: page-enter    0.22s ease-out both; }
+.animate-slide-in-right  { animation: slide-in-right 0.28s cubic-bezier(0.32,0.72,0,1) both; }
 
 /* ═══════════════════════════════════════════════════════════
    BASE

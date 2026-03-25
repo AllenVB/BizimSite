@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { History, CheckCircle, Calendar, CreditCard, Search, TrendingUp, ArrowDownLeft } from 'lucide-react';
 import { getPayments } from '../services/api';
 
@@ -19,16 +19,16 @@ const PaymentHistory = () => {
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
 
   return (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
             <History className="text-blue-500" /> Ödeme Geçmişi
           </h1>
           <p className="text-slate-500 mt-1">Tüm aidat ödemeleriniz</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-4 md:mb-8">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2.5 bg-blue-50 rounded-xl"><TrendingUp size={20} className="text-blue-500" /></div>
@@ -68,7 +68,7 @@ const PaymentHistory = () => {
             <div className="p-16 text-center text-slate-400">Yükleniyor...</div>
           ) : filtered.length === 0 ? (
             <div className="p-16 text-center">
-              <ArrowDownLeft size={40} className="text-slate-300 mx-auto mb-3" />
+              <ArrowDownLeft size={24} className="text-slate-300 mx-auto mb-3" />
               <p className="text-slate-400">Ödeme kaydı bulunamadı</p>
             </div>
           ) : (

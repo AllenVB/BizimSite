@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Megaphone, Plus, X, Lock, Trash2, CheckCircle } from 'lucide-react';
 import { getAnnouncements, createAnnouncement, deleteAnnouncement } from '../services/api';
 
@@ -12,6 +12,9 @@ const Announcements = ({ isAdmin }) => {
   );
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const canCreate = currentUser.role === 'admin' || currentUser.role === 'kapici';
+  const formRef = useRef(null);
+
+  useEffect(() => { if (showForm && formRef.current) { setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); } }, [showForm]);
 
   useEffect(() => {
     getAnnouncements().then(r => setAnnouncements(r.data)).catch(console.error).finally(() => setLoading(false));
@@ -54,11 +57,11 @@ const Announcements = ({ isAdmin }) => {
   const roleLabel = (role) => role === 'admin' ? 'Yönetici' : role === 'kapici' ? 'Kapıcı' : 'Sakin';
 
   return (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 md:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
               <Megaphone className="text-blue-500" /> Duyurular
             </h1>
             <p className="text-slate-500 mt-1">
@@ -88,7 +91,7 @@ const Announcements = ({ isAdmin }) => {
         </div>
 
         {showForm && canCreate && (
-          <form onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
+          <form ref={formRef} onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-1 block">Başlık</label>
               <input className="input-field"
@@ -110,7 +113,7 @@ const Announcements = ({ isAdmin }) => {
           <div className="text-center py-16 text-slate-400">Yükleniyor...</div>
         ) : announcements.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
-            <Megaphone size={48} className="mx-auto mb-4 opacity-30" />
+            <Megaphone size={28} className="mx-auto mb-4 opacity-30" />
             <p>Henüz duyuru yok</p>
           </div>
         ) : (
