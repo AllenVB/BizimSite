@@ -17,4 +17,8 @@ public class AidatConfig
     public string? PreviousMonth { get; set; }
     public DateTime? PreviousStartDate { get; set; }
     public DateTime? PreviousEndDate { get; set; }
+
+    // Ödeme bilgileri
+    public string IbanNo { get; set; } = string.Empty;
+    public string AccountHolder { get; set; } = string.Empty;
 }

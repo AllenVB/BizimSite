@@ -40,6 +40,8 @@ public class AidatController : ControllerBase
         config.DueDay = req.DueDay;
         config.CurrentMonth = req.CurrentMonth;
         config.Amount = req.Amount;
+        config.IbanNo = req.IbanNo;
+        config.AccountHolder = req.AccountHolder;
         config.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(config);
