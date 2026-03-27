@@ -1,6 +1,6 @@
 ﻿import AnnouncementBell from '../components/AnnouncementBell';
 import React, { useEffect, useState } from 'react';
-import { Wallet, Bell, User, CreditCard, AlertTriangle, Calendar, Loader2 } from 'lucide-react';
+import { Wallet, Bell, User, CreditCard, AlertTriangle, Calendar, Loader2, XCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAnnouncements, getComplaints, getAidatConfig, getPayments } from '../services/api';
 
@@ -29,11 +29,16 @@ const ResidentDashboard = () => {
         const periodStart = cfg.data?.periodStartDate ? new Date(cfg.data.periodStartDate) : null;
         const periodEnd   = cfg.data?.periodEndDate
           ? new Date(new Date(cfg.data.periodEndDate).setHours(23, 59, 59, 999)) : null;
-        const mine = p.data.find(x => {
-          if (!periodStart || !periodEnd) return true; // dönem yoksa herhangi ödeme yeterli
+        const periodPayments = p.data.filter(x => {
+          if (!periodStart || !periodEnd) return true;
           const d = new Date(x.paidAt);
           return d >= periodStart && d <= periodEnd;
         });
+        // Önce onaylı, sonra bekleyen, sonra reddedilen sıralamasıyla bul
+        const mine = periodPayments.find(x => x.status === 'confirmed')
+          || periodPayments.find(x => x.status === 'pending')
+          || periodPayments.find(x => x.status === 'rejected')
+          || null;
         setMyPayment(mine || null);
       } catch (err) {
         // sessiz hata
@@ -45,7 +50,9 @@ const ResidentDashboard = () => {
   }, []);
 
   const monthlyAidat = aidatConfig?.amount || 0;
-  const isPaid = !!myPayment; // mevcut dönemde ödeme varsa ödendi
+  const isPaid = myPayment?.status === 'confirmed';
+  const isPending = myPayment?.status === 'pending';
+  const isRejected = myPayment?.status === 'rejected';
   const pendingComplaints = myComplaints.filter(c => c.status !== 'resolved').length;
 
   return (
@@ -64,24 +71,54 @@ const ResidentDashboard = () => {
         </div>
       ) : (
         <>
+          {/* Dekont red bildirimi */}
+          {isRejected && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+              <XCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-red-700 text-sm">Dekontunuz Reddedildi</p>
+                {myPayment?.adminNote && (
+                  <p className="text-sm text-red-600 mt-0.5">Gerekçe: {myPayment.adminNote}</p>
+                )}
+                <button onClick={() => navigate('/resident/payments')}
+                  className="mt-2 text-xs font-semibold text-red-600 underline hover:text-red-800">
+                  Yeniden Yükle →
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4 md:mb-8">
             {/* Aidat */}
             <div className="stat-card group p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-red-50 text-red-600 rounded-xl group-hover:scale-110 transition-transform duration-200"><Wallet size={24} /></div>
-                <span className={`text-xs font-bold px-2 py-1 rounded-md ${isPaid ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
-                  {isPaid ? 'Ödendi' : 'Borçlu'}
+                <span className={`text-xs font-bold px-2 py-1 rounded-md ${
+                  isPaid ? 'bg-green-50 text-green-500' :
+                  isPending ? 'bg-blue-50 text-blue-500' :
+                  isRejected ? 'bg-red-50 text-red-500' :
+                  'bg-red-50 text-red-500'
+                }`}>
+                  {isPaid ? 'Ödendi' : isPending ? 'Bekliyor' : isRejected ? 'Reddedildi' : 'Borçlu'}
                 </span>
               </div>
               <h3 className="text-slate-500 text-sm font-medium">{isPaid ? 'Aylık Aidat' : 'Borcum'}</h3>
-              <p className={`text-2xl font-bold ${isPaid ? 'text-slate-800' : 'text-red-600'}`}>
+              <p className={`text-2xl font-bold ${isPaid ? 'text-slate-800' : isRejected ? 'text-red-600' : 'text-slate-800'}`}>
                 {monthlyAidat > 0 ? `₺${monthlyAidat.toLocaleString('tr-TR')}` : '—'}
               </p>
               {isPaid && <p className="text-xs text-green-500 mt-1 font-medium">Bu ay ödendi ✓</p>}
-              {!isPaid && monthlyAidat > 0 && (
+              {isPending && <p className="text-xs text-blue-500 mt-1 font-medium flex items-center gap-1"><Clock size={11} /> Onay bekleniyor</p>}
+              {isRejected && <p className="text-xs text-red-500 mt-1 font-medium">Dekont reddedildi!</p>}
+              {(!isPaid && !isPending && !isRejected) && monthlyAidat > 0 && (
                 <button onClick={() => navigate('/resident/payments')}
                   className="mt-4 w-full btn-primary justify-center text-sm py-2">
                   Hemen Öde
+                </button>
+              )}
+              {isRejected && (
+                <button onClick={() => navigate('/resident/payments')}
+                  className="mt-4 w-full bg-red-500 hover:bg-red-600 active:scale-95 text-white py-2 rounded-xl font-semibold transition-all text-sm">
+                  Yeniden Yükle
                 </button>
               )}
             </div>

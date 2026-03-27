@@ -7,6 +7,7 @@ const AidatOde = () => {
   const [monthlyAidat, setMonthlyAidat] = useState(0);
   const [isPaid, setIsPaid] = useState(false);
   const [hasPending, setHasPending] = useState(false);
+  const [rejectedNote, setRejectedNote] = useState(null);
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -32,6 +33,10 @@ const AidatOde = () => {
       const periodPayments = pay.data.filter(p => inPeriod(new Date(p.paidAt)));
       setIsPaid(periodPayments.some(p => p.status === 'confirmed'));
       setHasPending(periodPayments.some(p => p.status === 'pending'));
+      const rejected = periodPayments.find(p => p.status === 'rejected');
+      if (rejected && !periodPayments.some(p => p.status === 'confirmed' || p.status === 'pending')) {
+        setRejectedNote(rejected.adminNote || '');
+      }
     }).catch(console.error);
   }, []);
 
@@ -102,6 +107,29 @@ const AidatOde = () => {
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Onay Bekleniyor</h2>
             <p className="text-slate-500">Dekontunuz iletildi. Yönetici onayı bekleniyor.</p>
+          </div>
+        ) : rejectedNote !== null ? (
+          <div className="space-y-5">
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-7">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <AlertCircle size={24} className="text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-red-700 mb-1">Dekontunuz Reddedildi</h2>
+                  {rejectedNote ? (
+                    <p className="text-sm text-red-600 font-medium">Gerekçe: {rejectedNote}</p>
+                  ) : (
+                    <p className="text-sm text-red-500">Yönetici bir gerekçe belirtmedi.</p>
+                  )}
+                  <p className="text-sm text-red-500 mt-2">Lütfen dekontu tekrar yükleyin.</p>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => { setRejectedNote(null); setStep(2); setDekontPreview(''); setNote(''); }}
+              className="w-full btn-primary justify-center py-4 rounded-2xl text-lg shadow-lg">
+              <Upload size={22} /> Yeniden Dekont Yükle
+            </button>
           </div>
         ) : step === 1 ? (
           <div className="space-y-5">
