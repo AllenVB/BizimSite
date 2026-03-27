@@ -8,6 +8,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Railway'in atadığı PORT'u dinle
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
@@ -28,9 +32,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<TenantContext>(); // Her istek için ayrı instance
 builder.Services.AddControllers();
+var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",")
+    ?? new[] { "http://localhost:5173", "http://localhost:3000" };
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p =>
-    p.WithOrigins("http://localhost:5173", "http://localhost:3000")
-     .AllowAnyHeader().AllowAnyMethod()));
+    p.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
