@@ -47,10 +47,15 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<TenantContext>(); // Her istek için ayrı instance
 builder.Services.AddControllers();
-var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",")
-    ?? new[] { "http://localhost:5173", "http://localhost:3000", "https://localhost:5173" };
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p =>
-    p.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
+    p.SetIsOriginAllowed(origin =>
+        origin.Contains("localhost") ||
+        origin.EndsWith(".vercel.app") ||
+        origin.EndsWith(".railway.app") ||
+        (builder.Configuration["AllowedOrigins"] ?? "").Split(",").Any(o => o.Trim() == origin)
+    )
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
 
 var app = builder.Build();
 
