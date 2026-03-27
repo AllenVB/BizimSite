@@ -1,10 +1,2 @@
-[build]
-builder = "nixpacks"
-buildCommand = "cd BizimSite.API && dotnet publish -c Release -o out"
-
-[build.nixpacksPlan.phases.setup]
-nixPkgs = ["dotnet-sdk_8"]
-
 [deploy]
-startCommand = "dotnet BizimSite.API/out/BizimSite.API.dll"
 restartPolicyType = "on_failure"
