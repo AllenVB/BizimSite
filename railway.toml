@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd BizimSite.API && dotnet publish -c Release -o out"
+
+[deploy]
+startCommand = "cd BizimSite.API/out && ./BizimSite.API"
+healthcheckPath = "/health"
+restartPolicyType = "on_failure"
