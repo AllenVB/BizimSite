@@ -48,7 +48,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<TenantContext>(); // Her istek için ayrı instance
 builder.Services.AddControllers();
 var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",")
-    ?? new[] { "http://localhost:5173", "http://localhost:3000" };
+    ?? new[] { "http://localhost:5173", "http://localhost:3000", "https://localhost:5173" };
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p =>
     p.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
