@@ -14,7 +14,6 @@ import UserManagement from './pages/UserManagement';
 import Announcements from './pages/Announcements';
 import Complaints from './pages/Complaints';
 import PaymentHistory from './pages/PaymentHistory';
-import BlockManagement from './pages/BlockManagement';
 import Reports from './pages/Reports';
 import AdminManagement from './pages/AdminManagement';
 import CopTakibi from './pages/CopTakibi';
@@ -61,7 +60,6 @@ const AdminLayout = () => {
           <Routes>
             <Route index element={<AdminHome />} />
             <Route path="/users" element={<UserManagement />} />
-            <Route path="/blocks" element={<BlockManagement />} />
             <Route path="/finances" element={<FinancialManagement isAdmin={true} />} />
             <Route path="/announcements" element={<Announcements isAdmin={true} />} />
             <Route path="/complaints" element={<Complaints isAdmin={true} />} />

@@ -52,6 +52,7 @@ export const updateComplaint = (id, data) => api.put(`/complaints/${id}`, data);
 // PAYMENTS
 export const getPayments = () => api.get('/payments');
 export const makePayment = (data) => api.post('/payments', data);
+export const updatePaymentStatus = (id, status) => api.put(`/payments/${id}/status`, { status });
 
 // EXPENSES
 export const getExpenses = () => api.get('/expenses');
