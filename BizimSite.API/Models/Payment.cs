@@ -12,4 +12,5 @@ public class Payment
     public DateTime PaidAt { get; set; } = DateTime.UtcNow;
     public string? DekontUrl { get; set; }
     public string? DekontNote { get; set; }
+    public string? AdminNote { get; set; }
 }

@@ -37,7 +37,7 @@ public class PaymentsController : ControllerBase
 
         var list = await q.OrderByDescending(p => p.PaidAt).Select(p => new PaymentResponse(
             p.Id, p.UserId, p.User != null ? p.User.Name : "", p.User != null ? p.User.Block ?? "" : "", p.User != null ? p.User.No ?? "" : "",
-            p.Amount, p.Description, p.Status, p.PaidAt, p.DekontUrl, p.DekontNote)).ToListAsync();
+            p.Amount, p.Description, p.Status, p.PaidAt, p.DekontUrl, p.DekontNote, p.AdminNote)).ToListAsync();
         return Ok(list);
     }
 
@@ -75,6 +75,7 @@ public class PaymentsController : ControllerBase
         if (payment == null) return NotFound();
 
         payment.Status = req.Status; // "confirmed" veya "rejected"
+        payment.AdminNote = req.AdminNote;
 
         if (req.Status == "confirmed" && payment.User != null)
         {
