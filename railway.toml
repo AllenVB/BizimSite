@@ -6,5 +6,5 @@ buildCommand = "cd BizimSite.API && dotnet publish -c Release -o out"
 nixPkgs = ["dotnet-sdk_8"]
 
 [deploy]
-startCommand = "cd BizimSite.API/out && ./BizimSite.API"
+startCommand = "dotnet BizimSite.API/out/BizimSite.API.dll"
 restartPolicyType = "on_failure"
