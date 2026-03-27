@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, Building2, History, BarChart2, Shield, Settings, PackageOpen, MessageSquarePlus } from 'lucide-react';
+import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, History, BarChart2, Shield, Settings, PackageOpen, MessageSquarePlus } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = ({ isAdmin, isOpen, onClose }) => {
@@ -27,7 +27,6 @@ const Sidebar = ({ isAdmin, isOpen, onClose }) => {
   const adminItems = [
     { icon: <Home size={20} />, text: 'Genel Bakis', path: '/admin' },
     { icon: <Users size={20} />, text: 'Sakin Yonetimi', path: '/admin/users' },
-    { icon: <Building2 size={20} />, text: 'Blok Yonetimi', path: '/admin/blocks' },
     { icon: <CreditCard size={20} />, text: 'Mali Durum', path: '/admin/finances' },
     { icon: <Megaphone size={20} />, text: 'Duyurular', path: '/admin/announcements' },
     { icon: <AlertTriangle size={20} />, text: 'Talepler', path: '/admin/complaints' },

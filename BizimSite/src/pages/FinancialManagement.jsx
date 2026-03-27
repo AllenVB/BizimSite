@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, Check, X, CalendarDays, RotateCcw, AlertTriangle, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, Check, X, CalendarDays, RotateCcw, AlertTriangle, ChevronDown, CheckCircle, XCircle, Clock, ImageIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { getExpenses, createExpense, deleteExpense, getPayments, getAidatConfig, updateAidatConfig, startNewMonth, rollbackMonth } from '../services/api';
+import { getExpenses, createExpense, deleteExpense, getPayments, getAidatConfig, updateAidatConfig, startNewMonth, rollbackMonth, updatePaymentStatus } from '../services/api';
 
 const COLORS = ['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#06B6D4'];
 
@@ -32,7 +32,8 @@ const FinancialManagement = ({ isAdmin }) => {
   const [showNewMonthModal, setShowNewMonthModal] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [expForm, setExpForm] = useState({ label: '', amount: '', category: 'general' });
-  const [aidatForm, setAidatForm] = useState({ dueDay: 1, amount: 0, currentMonth: '' });
+  const [aidatForm, setAidatForm] = useState({ dueDay: 1, amount: 0, currentMonth: '', ibanNo: '', accountHolder: '' });
+  const [dekontModal, setDekontModal] = useState(null);
   const [newMonthForm, setNewMonthForm] = useState({ monthName: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +61,7 @@ const FinancialManagement = ({ isAdmin }) => {
       setExpenses(e.data);
       setPayments(p.data);
       setConfig(c.data);
-      if (c.data) setAidatForm({ dueDay: c.data.dueDay, amount: c.data.amount, currentMonth: c.data.currentMonth });
+      if (c.data) setAidatForm({ dueDay: c.data.dueDay, amount: c.data.amount, currentMonth: c.data.currentMonth, ibanNo: c.data.ibanNo || '', accountHolder: c.data.accountHolder || '' });
     }).catch(console.error).finally(() => setLoading(false));
   };
 
@@ -116,6 +117,13 @@ const FinancialManagement = ({ isAdmin }) => {
       setShowAidatForm(false);
       load();
     } catch { alert('Güncellenemedi!'); }
+  };
+
+  const handlePaymentStatus = async (id, status) => {
+    try {
+      await updatePaymentStatus(id, status);
+      load();
+    } catch { alert('Güncelleme başarısız!'); }
   };
 
   const handleNewMonth = async (e) => {
@@ -240,6 +248,21 @@ const FinancialManagement = ({ isAdmin }) => {
                 <label className="text-xs font-semibold text-slate-500 mb-1 block">Aidat Tutarı (₺)</label>
                 <input type="number" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400"
                   value={aidatForm.amount} onChange={e => setAidatForm({...aidatForm, amount: e.target.value})} />
+              </div>
+            </div>
+            <div className="border-t border-slate-100 pt-3 mt-1">
+              <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">IBAN Bilgileri</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Hesap Sahibi</label>
+                  <input className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400"
+                    value={aidatForm.accountHolder} onChange={e => setAidatForm({...aidatForm, accountHolder: e.target.value})} placeholder="Ad Soyad" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1 block">IBAN</label>
+                  <input className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400 font-mono"
+                    value={aidatForm.ibanNo} onChange={e => setAidatForm({...aidatForm, ibanNo: e.target.value})} placeholder="TR00 0000 0000 0000 0000 0000 00" />
+                </div>
               </div>
             </div>
             <div className="flex gap-2 mt-4">
@@ -404,10 +427,68 @@ const FinancialManagement = ({ isAdmin }) => {
               <div><span className="text-slate-500 text-xs">Bitiş:</span><br/><span className="font-semibold text-slate-800">{formatDate(config.periodEndDate)}</span></div>
               <div><span className="text-slate-500 text-xs">Son Ödeme:</span><br/><span className="font-semibold text-slate-800">{config.dueDay}. gün</span></div>
               <div><span className="text-slate-500 text-xs">Aidat:</span><br/><span className="font-semibold text-slate-800">₺{config.amount?.toLocaleString('tr-TR') || '—'}</span></div>
+              {config.ibanNo && <div className="col-span-2 sm:col-span-3 md:col-span-1"><span className="text-slate-500 text-xs">IBAN:</span><br/><span className="font-mono font-semibold text-slate-800 text-xs">{config.ibanNo}</span></div>}
             </div>
           </div>
         )}
+
+        {/* ── Bekleyen Ödemeler (Admin) ── */}
+        {canEdit && (() => {
+          const pending = payments.filter(p => p.status === 'pending');
+          if (pending.length === 0) return null;
+          return (
+            <div className="mt-4 bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden">
+              <div className="p-4 md:p-5 border-b border-amber-100 flex items-center gap-2">
+                <Clock size={16} className="text-amber-500" />
+                <h3 className="font-bold text-slate-800 text-sm md:text-base">Bekleyen Ödemeler</h3>
+                <span className="ml-auto text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{pending.length}</span>
+              </div>
+              <div className="divide-y divide-slate-50">
+                {pending.map(p => (
+                  <div key={p.id} className="flex items-center gap-3 px-4 md:px-5 py-3.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-800 text-sm truncate">{p.userName} — {p.block}/{p.no}</p>
+                      <p className="text-xs text-slate-500 truncate">{p.description}</p>
+                      <p className="text-xs text-slate-400">{new Date(p.paidAt).toLocaleDateString('tr-TR')}</p>
+                      {p.dekontNote && <p className="text-xs text-slate-500 italic truncate">"{p.dekontNote}"</p>}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="font-bold text-slate-800 text-sm">₺{p.amount?.toLocaleString('tr-TR')}</span>
+                      {p.dekontUrl && (
+                        <button onClick={() => setDekontModal(p.dekontUrl)}
+                          className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition" title="Dekontu Görüntüle">
+                          <ImageIcon size={15} />
+                        </button>
+                      )}
+                      <button onClick={() => handlePaymentStatus(p.id, 'confirmed')}
+                        className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition" title="Onayla">
+                        <CheckCircle size={17} />
+                      </button>
+                      <button onClick={() => handlePaymentStatus(p.id, 'rejected')}
+                        className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition" title="Reddet">
+                        <XCircle size={17} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
+
+      {/* Dekont Modal */}
+      {dekontModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setDekontModal(null)}>
+          <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setDekontModal(null)}
+              className="absolute -top-10 right-0 text-white hover:text-slate-300 flex items-center gap-1 text-sm">
+              <X size={20} /> Kapat
+            </button>
+            <img src={dekontModal} alt="Dekont" className="w-full rounded-2xl shadow-2xl max-h-[80vh] object-contain" />
+          </div>
+        </div>
+      )}
 
       {/* ── Yeni Ay Modal ── */}
       {showNewMonthModal && (
