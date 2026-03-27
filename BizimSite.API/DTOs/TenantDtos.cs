@@ -6,6 +6,7 @@ public record CreateTenantRequest(
     string Address,
     string Phone,
     string PlanType,
+    string BuildingPassword,
     // İlk admin bilgileri
     string AdminName,
     string AdminEmail,

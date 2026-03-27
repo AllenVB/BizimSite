@@ -31,6 +31,7 @@ api.interceptors.response.use(
 // AUTH
 export const login = (data) => api.post('/auth/login', data);
 export const register = (data) => api.post('/auth/register', data);
+export const selfRegister = (data) => api.post('/auth/self-register', data);
 
 // USERS
 export const getUsers = () => api.get('/users');

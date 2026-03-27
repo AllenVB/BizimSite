@@ -49,6 +49,7 @@ public class SuperAdminController : ControllerBase
             Address = req.Address,
             Phone = req.Phone,
             PlanType = req.PlanType,
+            BuildingPassword = req.BuildingPassword,
             IsActive = true
         };
         _db.Tenants.Add(tenant);

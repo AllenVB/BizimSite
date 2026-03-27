@@ -24,7 +24,7 @@ const SuperAdminPanel = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "", slug: "", address: "", phone: "", planType: "basic",
-    adminName: "", adminEmail: "", adminPassword: ""
+    adminName: "", adminEmail: "", adminPassword: "", buildingPassword: ""
   });
   const [editData, setEditData] = useState({ planType: "basic", isActive: true, expiresAt: "" });
 
@@ -48,7 +48,7 @@ const SuperAdminPanel = () => {
     try {
       await createTenant(formData);
       setShowForm(false);
-      setFormData({ name: "", slug: "", address: "", phone: "", planType: "basic", adminName: "", adminEmail: "", adminPassword: "" });
+      setFormData({ name: "", slug: "", address: "", phone: "", planType: "basic", adminName: "", adminEmail: "", adminPassword: "", buildingPassword: "" });
       loadData();
     } catch (e) {
       setError(e.response?.data?.message || "Bina oluşturulamadı!");
@@ -489,6 +489,10 @@ const SuperAdminPanel = () => {
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Admin Şifre *</label>
                     <input required type="password" className="input-field" placeholder="••••••••" value={formData.adminPassword} onChange={e => setFormData({...formData, adminPassword: e.target.value})} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Bina Şifresi * <span className="text-gray-400 font-normal">(Sakinler kayıt olurken kullanır)</span></label>
+                    <input required className="input-field" placeholder="Bina123!" value={formData.buildingPassword || ''} onChange={e => setFormData({...formData, buildingPassword: e.target.value})} />
                   </div>
                   <div className="md:col-span-2 flex justify-end gap-3">
                     <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">İptal</button>

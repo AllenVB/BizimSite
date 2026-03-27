@@ -54,6 +54,35 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("self-register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SelfRegister(SelfRegisterRequest req)
+    {
+        var tenant = await _db.Tenants.FirstOrDefaultAsync(t =>
+            t.Name == req.BuildingName &&
+            t.BuildingPassword == req.BuildingPassword &&
+            t.IsActive);
+
+        if (tenant == null)
+            return BadRequest(new { message = "Bina adı veya bina şifresi hatalı" });
+
+        if (await _db.Users.AnyAsync(u => u.Email == req.Email))
+            return BadRequest(new { message = "Bu e-posta adresi zaten kayıtlı" });
+
+        var user = new User
+        {
+            Name = req.Name,
+            Email = req.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+            Role = "resident",
+            Type = req.UserType,
+            TenantId = tenant.Id
+        };
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Kayıt başarılı! Giriş yapabilirsiniz." });
+    }
+
     [HttpPost("register")]
     [Authorize(Roles = "admin,superadmin")]
     public async Task<IActionResult> Register(RegisterRequest req, [FromServices] TenantContext tenantCtx)
