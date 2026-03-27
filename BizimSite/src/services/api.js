@@ -93,4 +93,9 @@ export const getAllSuperAdminUsers = () => api.get('/superadmin/users');
 export const resetUserPassword = (id, newPassword) => api.put(`/superadmin/users/${id}/reset-password`, { newPassword });
 export const seedSuperAdmin = () => api.post('/superadmin/seed');
 
+// FEEDBACK
+export const submitFeedback = (data) => api.post('/feedback', data);
+export const getFeedbacks = () => api.get('/feedback');
+export const updateFeedbackStatus = (id, data) => api.put(`/feedback/${id}`, data);
+
 export default api;

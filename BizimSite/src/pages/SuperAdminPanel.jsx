@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
-import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2, Star, Zap, Crown, KeyRound, Search } from "lucide-react";
-import { getSuperAdminDashboard, getTenants, createTenant, updateTenant, deleteTenant, getTenantUsers, getAllSuperAdminUsers, resetUserPassword } from "../services/api";
+import { Building2, Users, TrendingUp, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, LogOut, ChevronDown, ChevronUp, X, Check, AlertCircle, Loader2, Star, Zap, Crown, KeyRound, Search, MessageSquarePlus } from "lucide-react";
+import { getSuperAdminDashboard, getTenants, createTenant, updateTenant, deleteTenant, getTenantUsers, getAllSuperAdminUsers, resetUserPassword, getFeedbacks, updateFeedbackStatus } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const SuperAdminPanel = () => {
@@ -17,6 +17,8 @@ const SuperAdminPanel = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbacksLoading, setFeedbacksLoading] = useState(false);
   const [resetModal, setResetModal] = useState(null); // { user }
   const [resetPassword, setResetPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
@@ -106,9 +108,31 @@ const SuperAdminPanel = () => {
     }
   };
 
+  const loadFeedbacks = async () => {
+    setFeedbacksLoading(true);
+    try {
+      const res = await getFeedbacks();
+      setFeedbacks(res.data);
+    } catch (e) {
+      setError("Geri bildirimler yüklenemedi");
+    } finally {
+      setFeedbacksLoading(false);
+    }
+  };
+
+  const handleFeedbackStatus = async (id, status) => {
+    try {
+      await updateFeedbackStatus(id, { status });
+      setFeedbacks(prev => prev.map(f => f.id === id ? { ...f, status } : f));
+    } catch (e) {
+      setError("Durum güncellenemedi");
+    }
+  };
+
   const handleTabChange = (key) => {
     setTab(key);
     if (key === "users" && allUsers.length === 0) loadAllUsers();
+    if (key === "feedbacks" && feedbacks.length === 0) loadFeedbacks();
   };
 
   const handleResetPassword = async (e) => {
@@ -154,10 +178,15 @@ const SuperAdminPanel = () => {
 
       {/* Nav Tabs */}
       <div className="bg-white border-b px-6 flex gap-1">
-        {[["dashboard", "Dashboard"], ["tenants", "Binalar"], ["users", "Kullanıcılar"], ["plans", "Planlar"]].map(([key, label]) => (
+        {[["dashboard", "Dashboard"], ["tenants", "Binalar"], ["users", "Kullanıcılar"], ["plans", "Planlar"], ["feedbacks", "Geri Bildirimler"]].map(([key, label]) => (
           <button key={key} onClick={() => handleTabChange(key)}
-            className={"px-4 py-3 text-sm font-medium border-b-2 transition " + (tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800")}>
+            className={"px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-1.5 " + (tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800")}>
             {label}
+            {key === "feedbacks" && feedbacks.filter(f => f.status === "new").length > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                {feedbacks.filter(f => f.status === "new").length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -173,6 +202,74 @@ const SuperAdminPanel = () => {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 size={32} className="animate-spin text-indigo-600" />
+          </div>
+        ) : tab === "feedbacks" ? (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Geri Bildirimler ({feedbacks.length})</h2>
+              <button onClick={loadFeedbacks} className="text-xs text-indigo-600 hover:underline">Yenile</button>
+            </div>
+            {feedbacksLoading ? (
+              <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-indigo-600" /></div>
+            ) : feedbacks.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <MessageSquarePlus size={36} className="mx-auto mb-3 opacity-40" />
+                <p className="text-sm">Henüz geri bildirim yok</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {feedbacks.map(f => {
+                  const typeColors = { general: 'bg-slate-100 text-slate-600', suggestion: 'bg-blue-100 text-blue-700', bug: 'bg-red-100 text-red-700', compliment: 'bg-green-100 text-green-700' };
+                  const typeLabels = { general: 'Genel', suggestion: 'Öneri', bug: 'Hata', compliment: 'Teşekkür' };
+                  const statusColors = { new: 'bg-orange-100 text-orange-700', read: 'bg-blue-50 text-blue-600', archived: 'bg-gray-100 text-gray-500' };
+                  const statusLabels = { new: 'Yeni', read: 'Okundu', archived: 'Arşiv' };
+                  return (
+                    <div key={f.id} className={`bg-white rounded-xl border p-4 transition-all ${f.status === 'new' ? 'border-orange-200 shadow-sm' : 'border-gray-100'}`}>
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[f.type] || typeColors.general}`}>
+                              {typeLabels[f.type] || f.type}
+                            </span>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColors[f.status] || statusColors.new}`}>
+                              {statusLabels[f.status] || f.status}
+                            </span>
+                            {f.tenantName && (
+                              <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">{f.tenantName}</span>
+                            )}
+                          </div>
+                          <h3 className="font-semibold text-gray-800 text-sm truncate">{f.title}</h3>
+                          <p className="text-gray-600 text-sm mt-1 whitespace-pre-wrap">{f.message}</p>
+                          <div className="mt-2 text-xs text-gray-400">
+                            {f.senderName} · {f.senderRole} · {new Date(f.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          {f.status !== 'read' && (
+                            <button onClick={() => handleFeedbackStatus(f.id, 'read')}
+                              className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-3 py-1.5 rounded-lg transition active:scale-95">
+                              Okundu
+                            </button>
+                          )}
+                          {f.status !== 'archived' && (
+                            <button onClick={() => handleFeedbackStatus(f.id, 'archived')}
+                              className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 font-medium px-3 py-1.5 rounded-lg transition active:scale-95">
+                              Arşivle
+                            </button>
+                          )}
+                          {f.status === 'archived' && (
+                            <button onClick={() => handleFeedbackStatus(f.id, 'new')}
+                              className="text-xs bg-orange-50 hover:bg-orange-100 text-orange-600 font-medium px-3 py-1.5 rounded-lg transition active:scale-95">
+                              Geri Al
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : tab === "plans" ? (
           <PlansTab />

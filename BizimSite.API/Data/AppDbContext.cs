@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<BorrowResponse> BorrowResponses => Set<BorrowResponse>();
     public DbSet<AidatConfig> AidatConfigs => Set<AidatConfig>();
     public DbSet<Block> Blocks => Set<Block>();
+    public DbSet<Feedback> Feedbacks => Set<Feedback>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

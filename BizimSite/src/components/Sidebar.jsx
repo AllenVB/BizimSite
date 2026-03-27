@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, Building2, History, BarChart2, Shield, Settings, PackageOpen } from 'lucide-react';
+import { Home, Trash2, Megaphone, AlertTriangle, LogOut, MessageSquare, Users, CreditCard, Building2, History, BarChart2, Shield, Settings, PackageOpen, MessageSquarePlus } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = ({ isAdmin, isOpen, onClose }) => {
@@ -36,6 +36,7 @@ const Sidebar = ({ isAdmin, isOpen, onClose }) => {
     { icon: <MessageSquare size={20} />, text: 'Sohbet Paneli', path: '/admin/chat' },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/admin/cop', kapici: true },
     { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/admin/odunc', premium: true },
+    { icon: <MessageSquarePlus size={20} />, text: 'Geri Bildirim', path: '/admin/feedback' },
   ];
 
   const residentItems = [
@@ -50,6 +51,7 @@ const Sidebar = ({ isAdmin, isOpen, onClose }) => {
     { icon: <BarChart2 size={20} />, text: 'Raporlar', path: '/resident/reports', premium: true },
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/resident/cop', kapici: true },
     { icon: <PackageOpen size={20} />, text: 'Odunc Paneli', path: '/resident/odunc', premium: true },
+    { icon: <MessageSquarePlus size={20} />, text: 'Geri Bildirim', path: '/resident/feedback' },
   ];
 
   const kapiciItems = [
@@ -57,6 +59,7 @@ const Sidebar = ({ isAdmin, isOpen, onClose }) => {
     { icon: <Trash2 size={20} />, text: 'Cop Takibi', path: '/kapici/cop' },
     { icon: <Megaphone size={20} />, text: 'Duyurular', path: '/kapici/announcements' },
     { icon: <AlertTriangle size={20} />, text: 'Talepler', path: '/kapici/complaints' },
+    { icon: <MessageSquarePlus size={20} />, text: 'Geri Bildirim', path: '/kapici/feedback' },
   ];
 
   const allItems = isKapici ? kapiciItems : isAdmin ? adminItems : residentItems;

@@ -20,6 +20,7 @@ import AdminManagement from './pages/AdminManagement';
 import CopTakibi from './pages/CopTakibi';
 import OduncPanel from './pages/OduncPanel';
 import SuperAdminPanel from './pages/SuperAdminPanel';
+import FeedbackPage from './pages/FeedbackPage';
 
 /* Sayfa geçiş animasyonu — pathname değişince yeniden mount eder */
 const AnimatedContent = ({ children }) => {
@@ -70,6 +71,7 @@ const AdminLayout = () => {
             <Route path="/odunc" element={<OduncPanel />} />
             <Route path="/chat" element={<ChatPanel />} />
             <Route path="/settings" element={<ProfileSettings />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
           </Routes>
         </AnimatedContent>
       </div>
@@ -102,6 +104,7 @@ const ResidentLayout = () => {
             <Route path="/cop" element={<CopTakibi />} />
             <Route path="/odunc" element={<OduncPanel />} />
             <Route path="/admins" element={<AdminManagement isResident={true} />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
           </Routes>
         </AnimatedContent>
       </div>
@@ -127,6 +130,7 @@ const KapiciLayout = () => {
             <Route path="/announcements" element={<Announcements isAdmin={true} />} />
             <Route path="/complaints" element={<Complaints isAdmin={false} />} />
             <Route path="/settings" element={<ProfileSettings />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
           </Routes>
         </AnimatedContent>
       </div>
