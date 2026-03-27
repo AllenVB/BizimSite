@@ -34,6 +34,8 @@ const FinancialManagement = ({ isAdmin }) => {
   const [expForm, setExpForm] = useState({ label: '', amount: '', category: 'general' });
   const [aidatForm, setAidatForm] = useState({ dueDay: 1, amount: 0, currentMonth: '', ibanNo: '', accountHolder: '' });
   const [dekontModal, setDekontModal] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectNote, setRejectNote] = useState('');
   const [newMonthForm, setNewMonthForm] = useState({ monthName: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -119,9 +121,11 @@ const FinancialManagement = ({ isAdmin }) => {
     } catch { alert('Güncellenemedi!'); }
   };
 
-  const handlePaymentStatus = async (id, status) => {
+  const handlePaymentStatus = async (id, status, note) => {
     try {
-      await updatePaymentStatus(id, status);
+      await updatePaymentStatus(id, status, note || undefined);
+      setRejectingId(null);
+      setRejectNote('');
       load();
     } catch { alert('Güncelleme başarısız!'); }
   };
@@ -445,30 +449,56 @@ const FinancialManagement = ({ isAdmin }) => {
               </div>
               <div className="divide-y divide-slate-50">
                 {pending.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 px-4 md:px-5 py-3.5">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-800 text-sm truncate">{p.userName} — {p.block}/{p.no}</p>
-                      <p className="text-xs text-slate-500 truncate">{p.description}</p>
-                      <p className="text-xs text-slate-400">{new Date(p.paidAt).toLocaleDateString('tr-TR')}</p>
-                      {p.dekontNote && <p className="text-xs text-slate-500 italic truncate">"{p.dekontNote}"</p>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="font-bold text-slate-800 text-sm">₺{p.amount?.toLocaleString('tr-TR')}</span>
-                      {p.dekontUrl && (
-                        <button onClick={() => setDekontModal(p.dekontUrl)}
-                          className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition" title="Dekontu Görüntüle">
-                          <ImageIcon size={15} />
+                  <div key={p.id}>
+                    <div className="flex items-center gap-3 px-4 md:px-5 py-3.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-800 text-sm truncate">{p.userName} — {p.block}/{p.no}</p>
+                        <p className="text-xs text-slate-500 truncate">{p.description}</p>
+                        <p className="text-xs text-slate-400">{new Date(p.paidAt).toLocaleDateString('tr-TR')}</p>
+                        {p.dekontNote && <p className="text-xs text-slate-500 italic truncate">"{p.dekontNote}"</p>}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="font-bold text-slate-800 text-sm">₺{p.amount?.toLocaleString('tr-TR')}</span>
+                        {p.dekontUrl && (
+                          <button onClick={() => setDekontModal(p.dekontUrl)}
+                            className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition" title="Dekontu Görüntüle">
+                            <ImageIcon size={15} />
+                          </button>
+                        )}
+                        <button onClick={() => handlePaymentStatus(p.id, 'confirmed')}
+                          className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition" title="Onayla">
+                          <CheckCircle size={17} />
                         </button>
-                      )}
-                      <button onClick={() => handlePaymentStatus(p.id, 'confirmed')}
-                        className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition" title="Onayla">
-                        <CheckCircle size={17} />
-                      </button>
-                      <button onClick={() => handlePaymentStatus(p.id, 'rejected')}
-                        className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition" title="Reddet">
-                        <XCircle size={17} />
-                      </button>
+                        <button onClick={() => { setRejectingId(p.id); setRejectNote(''); }}
+                          className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition" title="Reddet">
+                          <XCircle size={17} />
+                        </button>
+                      </div>
                     </div>
+                    {/* Inline red gerekçesi formu */}
+                    {rejectingId === p.id && (
+                      <div className="px-4 md:px-5 pb-3.5 bg-red-50 border-t border-red-100">
+                        <p className="text-xs font-semibold text-red-600 mt-3 mb-1.5">Red Gerekçesi (kullanıcıya iletilir)</p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={rejectNote}
+                            onChange={e => setRejectNote(e.target.value)}
+                            placeholder="Örn: Tutar eksik, dekont okunamıyor..."
+                            className="flex-1 px-3 py-2 text-sm border border-red-200 rounded-xl outline-none focus:border-red-400 bg-white"
+                            autoFocus
+                          />
+                          <button onClick={() => handlePaymentStatus(p.id, 'rejected', rejectNote)}
+                            className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
+                            Reddet
+                          </button>
+                          <button onClick={() => setRejectingId(null)}
+                            className="text-slate-400 hover:text-slate-600 text-xs px-2 py-2 rounded-xl transition">
+                            İptal
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
