@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<AidatConfig> AidatConfigs => Set<AidatConfig>();
     public DbSet<Block> Blocks => Set<Block>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
+    public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

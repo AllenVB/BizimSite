@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Building2, Lock, User, Eye, EyeOff, Mail, Home, CheckCircle } from 'lucide-react';
+import { Building2, Lock, User, Eye, EyeOff, Mail, Home, CheckCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { login, selfRegister } from '../services/api';
+import { login, selfRegister, sendVerificationCode } from '../services/api';
 
 const checkPasswordStrength = (pw) => {
   const hasLetter  = /[a-zA-Z]/.test(pw);
@@ -15,20 +15,12 @@ const checkPasswordStrength = (pw) => {
   return            { level: 'strong', label: 'Güçlü', color: 'bg-green-500',  text: 'text-green-600' };
 };
 
-const InputField = ({ icon: Icon, type, placeholder, value, onChange, rightEl }) => (
-  <div className="relative">
-    <Icon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-    <input type={type} placeholder={placeholder} value={value} onChange={onChange} required
-      className="input-field pl-10 pr-10" />
-    {rightEl}
-  </div>
-);
-
 const Login = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState('login');
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
+  const [showBuildingPw, setShowBuildingPw] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,10 +31,20 @@ const Login = () => {
   // Register state
   const [regData, setRegData] = useState({
     buildingName: '', buildingPassword: '', name: '', email: '',
+    phone: '', block: '', no: '',
     password: '', passwordConfirm: '', userType: 'Kiracı'
   });
+  const [regStep, setRegStep] = useState('form'); // 'form' | 'verify'
+  const [verifyCode, setVerifyCode] = useState('');
 
   const pwStrength = checkPasswordStrength(regData.password);
+
+  const eyeBtn = (show, toggle) => (
+    <button type="button" onClick={toggle}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1">
+      {show ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  );
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -64,11 +66,25 @@ const Login = () => {
     } finally { setLoading(false); }
   };
 
-  const handleRegister = async (e) => {
+  // Step 1: validate form & send verification code
+  const handleSendCode = async (e) => {
     e.preventDefault();
     setError('');
     if (regData.password !== regData.passwordConfirm) { setError('Şifreler eşleşmiyor!'); return; }
     if (!pwStrength || pwStrength.level === 'weak') { setError('Lütfen daha güçlü bir şifre belirleyin.'); return; }
+    setLoading(true);
+    try {
+      await sendVerificationCode({ email: regData.email });
+      setRegStep('verify');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Doğrulama kodu gönderilemedi, tekrar deneyin.');
+    } finally { setLoading(false); }
+  };
+
+  // Step 2: verify code & create account
+  const handleVerifyAndRegister = async (e) => {
+    e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       await selfRegister({
@@ -77,22 +93,31 @@ const Login = () => {
         name: regData.name,
         email: regData.email,
         password: regData.password,
-        userType: regData.userType
+        userType: regData.userType,
+        verificationCode: verifyCode,
+        phone: regData.phone,
+        block: regData.block,
+        no: regData.no
       });
       setSuccess('Kayıt başarılı! Giriş yapabilirsiniz.');
       setTab('login');
-      setRegData({ buildingName:'', buildingPassword:'', name:'', email:'', password:'', passwordConfirm:'', userType:'Kiracı' });
+      setRegStep('form');
+      setVerifyCode('');
+      setRegData({ buildingName:'', buildingPassword:'', name:'', email:'', phone:'', block:'', no:'', password:'', passwordConfirm:'', userType:'Kiracı' });
     } catch (err) {
       setError(err.response?.data?.message || 'Kayıt başarısız, tekrar deneyin.');
     } finally { setLoading(false); }
   };
 
-  const eyeBtn = (show, toggle) => (
-    <button type="button" onClick={toggle}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1">
-      {show ? <EyeOff size={16} /> : <Eye size={16} />}
-    </button>
-  );
+  const handleResendCode = async () => {
+    setError(''); setLoading(true);
+    try {
+      await sendVerificationCode({ email: regData.email });
+      setSuccess('Kod tekrar gönderildi.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Kod gönderilemedi.');
+    } finally { setLoading(false); }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
@@ -133,7 +158,7 @@ const Login = () => {
           {/* Tab seçici */}
           <div className="flex border-b border-slate-200" style={{ background: 'rgba(255,255,255,0.97)' }}>
             {[['login', 'Giriş Yap'], ['register', 'Kayıt Ol']].map(([key, label]) => (
-              <button key={key} type="button" onClick={() => { setTab(key); setError(''); setSuccess(''); }}
+              <button key={key} type="button" onClick={() => { setTab(key); setError(''); setSuccess(''); setRegStep('form'); setVerifyCode(''); }}
                 className={`flex-1 py-3 text-sm font-semibold transition-all duration-150 ${
                   tab === key
                     ? 'text-blue-600 border-b-2 border-blue-600'
@@ -158,8 +183,12 @@ const Login = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5">E-posta</label>
-                  <InputField icon={User} type="email" placeholder="ornek@mail.com"
-                    value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} />
+                  <div className="relative">
+                    <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="email" placeholder="ornek@mail.com" required
+                      className="input-field pl-10 pr-10"
+                      value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5">Şifre</label>
@@ -179,9 +208,9 @@ const Login = () => {
               </form>
             )}
 
-            {/* KAYIT FORMU */}
-            {tab === 'register' && (
-              <form onSubmit={handleRegister} className="space-y-3">
+            {/* KAYIT — ADIM 1: FORM */}
+            {tab === 'register' && regStep === 'form' && (
+              <form onSubmit={handleSendCode} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Bina Adı</label>
@@ -196,9 +225,10 @@ const Login = () => {
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Bina Şifresi</label>
                     <div className="relative">
                       <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input type="password" required placeholder="••••••"
-                        className="input-field pl-9 text-sm"
+                      <input type={showBuildingPw ? 'text' : 'password'} required placeholder="••••••"
+                        className="input-field pl-9 pr-9 text-sm"
                         value={regData.buildingPassword} onChange={e => setRegData({...regData, buildingPassword: e.target.value})} />
+                      {eyeBtn(showBuildingPw, () => setShowBuildingPw(!showBuildingPw))}
                     </div>
                   </div>
                 </div>
@@ -220,6 +250,37 @@ const Login = () => {
                     <input type="email" required placeholder="ornek@mail.com"
                       className="input-field pl-9 text-sm"
                       value={regData.email} onChange={e => setRegData({...regData, email: e.target.value})} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Telefon Numarası</label>
+                  <div className="relative">
+                    <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="tel" required placeholder="05XX XXX XX XX"
+                      className="input-field pl-9 text-sm"
+                      value={regData.phone} onChange={e => setRegData({...regData, phone: e.target.value})} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Blok</label>
+                    <div className="relative">
+                      <Building2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input type="text" required placeholder="A"
+                        className="input-field pl-9 text-sm"
+                        value={regData.block} onChange={e => setRegData({...regData, block: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Daire No</label>
+                    <div className="relative">
+                      <Hash size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input type="text" required placeholder="12"
+                        className="input-field pl-9 text-sm"
+                        value={regData.no} onChange={e => setRegData({...regData, no: e.target.value})} />
+                    </div>
                   </div>
                 </div>
 
@@ -285,8 +346,54 @@ const Login = () => {
 
                 <button type="submit" disabled={loading}
                   className="w-full btn-primary justify-center py-3 rounded-xl disabled:opacity-60">
-                  {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor...</> : 'Kayıt Ol'}
+                  {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kod gönderiliyor...</> : 'Doğrulama Kodu Gönder'}
                 </button>
+              </form>
+            )}
+
+            {/* KAYIT — ADIM 2: KOD DOĞRULAMA */}
+            {tab === 'register' && regStep === 'verify' && (
+              <form onSubmit={handleVerifyAndRegister} className="space-y-4">
+                <div className="text-center py-2">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 mb-3">
+                    <ShieldCheck size={28} className="text-blue-600" />
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base">E-postanızı doğrulayın</h3>
+                  <p className="text-slate-500 text-xs mt-1">
+                    <span className="font-semibold text-slate-700">{regData.email}</span> adresine 6 haneli bir doğrulama kodu gönderdik.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Doğrulama Kodu</label>
+                  <input
+                    type="text" inputMode="numeric" maxLength={6} required
+                    placeholder="000000"
+                    className="input-field text-center text-2xl font-bold tracking-widest"
+                    value={verifyCode}
+                    onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  />
+                  <p className="text-xs text-slate-400 mt-1 text-center">Kod 10 dakika geçerlidir</p>
+                </div>
+
+                {error && <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-xl"><div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />{error}</div>}
+                {success && <div className="flex items-center gap-2 text-green-700 text-sm bg-green-50 border border-green-200 p-3 rounded-xl"><CheckCircle size={14} /> {success}</div>}
+
+                <button type="submit" disabled={loading || verifyCode.length < 6}
+                  className="w-full btn-primary justify-center py-3 rounded-xl disabled:opacity-60">
+                  {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor...</> : 'Doğrula ve Kayıt Ol'}
+                </button>
+
+                <div className="flex items-center justify-between pt-1">
+                  <button type="button" onClick={() => { setRegStep('form'); setError(''); setVerifyCode(''); }}
+                    className="text-xs text-slate-500 hover:text-slate-700 transition-colors">
+                    ← Geri dön
+                  </button>
+                  <button type="button" onClick={handleResendCode} disabled={loading}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-semibold transition-colors disabled:opacity-50">
+                    Kodu tekrar gönder
+                  </button>
+                </div>
               </form>
             )}
 

@@ -46,6 +46,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<TenantContext>(); // Her istek için ayrı instance
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p =>
     p.SetIsOriginAllowed(origin =>
