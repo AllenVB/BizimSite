@@ -4,6 +4,7 @@ using BizimSite.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BizimSite.API.Controllers;
 
@@ -21,6 +22,28 @@ public class UsersController : ControllerBase
         if (_tenant.TenantId.HasValue) return _tenant.TenantId.Value;
         var tenantClaim = HttpContext.User.FindFirst("tenantId")?.Value;
         return int.TryParse(tenantClaim, out var id) ? id : 0;
+    }
+
+    // Kendi profilini güncelle (tüm roller)
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateMe(UpdateProfileRequest req)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var u = await _db.Users.FindAsync(userId);
+        if (u == null) return NotFound();
+
+        // E-posta başkası tarafından kullanılıyorsa reddet
+        if (await _db.Users.AnyAsync(x => x.Email == req.Email && x.Id != userId))
+            return BadRequest(new { message = "Bu e-posta başka bir hesapta kullanılıyor." });
+
+        u.Name = req.Name;
+        u.Email = req.Email;
+        u.Phone = req.Phone;
+        if (!string.IsNullOrEmpty(req.Password))
+            u.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password);
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Profil güncellendi.", name = u.Name, email = u.Email, phone = u.Phone });
     }
 
     // Sadece kendi binasının admin kullanıcılarını getir (superadmin hariç)

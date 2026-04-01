@@ -39,6 +39,7 @@ export const getUsers = () => api.get('/users');
 export const getAdmins = () => api.get('/users/admins');
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/users/${id}`);
+export const updateMyProfile = (data) => api.put('/users/me', data);
 
 // ANNOUNCEMENTS
 export const getAnnouncements = () => api.get('/announcements');
