@@ -121,23 +121,11 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Doğrulama kodu e-posta adresinize gönderildi." });
     }
 
-    // Kodu doğrula + hesap oluştur
+    // Hesap oluştur
     [HttpPost("self-register")]
     [AllowAnonymous]
     public async Task<IActionResult> SelfRegister(SelfRegisterRequest req)
     {
-        // Doğrulama kodunu kontrol et
-        var vc = await _db.VerificationCodes
-            .Where(v => v.Email == req.Email && v.Code == req.VerificationCode && !v.Used)
-            .OrderByDescending(v => v.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (vc == null)
-            return BadRequest(new { message = "Doğrulama kodu hatalı" });
-
-        if (vc.ExpiresAt < DateTime.UtcNow)
-            return BadRequest(new { message = "Doğrulama kodunun süresi dolmuş. Yeni kod isteyin." });
-
         var tenant = await _db.Tenants.FirstOrDefaultAsync(t =>
             t.Name == req.BuildingName &&
             t.BuildingPassword == req.BuildingPassword &&
@@ -162,8 +150,6 @@ public class AuthController : ControllerBase
             TenantId = tenant.Id
         };
         _db.Users.Add(user);
-
-        vc.Used = true; // Kodu kullanıldı olarak işaretle
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Kayıt başarılı! Giriş yapabilirsiniz." });

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Building2, Lock, User, Eye, EyeOff, Mail, Home, CheckCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
+import { Building2, Lock, User, Eye, EyeOff, Mail, Home, CheckCircle, Phone, Hash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { login, selfRegister, sendVerificationCode } from '../services/api';
+import { login, selfRegister } from '../services/api';
 
 const checkPasswordStrength = (pw) => {
   const hasLetter  = /[a-zA-Z]/.test(pw);
@@ -25,17 +25,12 @@ const Login = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Login state
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-
-  // Register state
   const [regData, setRegData] = useState({
     buildingName: '', buildingPassword: '', name: '', email: '',
     phone: '', block: '', no: '',
     password: '', passwordConfirm: '', userType: 'Kiracı'
   });
-  const [regStep, setRegStep] = useState('form'); // 'form' | 'verify'
-  const [verifyCode, setVerifyCode] = useState('');
 
   const pwStrength = checkPasswordStrength(regData.password);
 
@@ -66,25 +61,11 @@ const Login = () => {
     } finally { setLoading(false); }
   };
 
-  // Step 1: validate form & send verification code
-  const handleSendCode = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     if (regData.password !== regData.passwordConfirm) { setError('Şifreler eşleşmiyor!'); return; }
     if (!pwStrength || pwStrength.level === 'weak') { setError('Lütfen daha güçlü bir şifre belirleyin.'); return; }
-    setLoading(true);
-    try {
-      await sendVerificationCode({ email: regData.email });
-      setRegStep('verify');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Doğrulama kodu gönderilemedi, tekrar deneyin.');
-    } finally { setLoading(false); }
-  };
-
-  // Step 2: verify code & create account
-  const handleVerifyAndRegister = async (e) => {
-    e.preventDefault();
-    setError('');
     setLoading(true);
     try {
       await selfRegister({
@@ -94,28 +75,16 @@ const Login = () => {
         email: regData.email,
         password: regData.password,
         userType: regData.userType,
-        verificationCode: verifyCode,
         phone: regData.phone,
         block: regData.block,
-        no: regData.no
+        no: regData.no,
+        verificationCode: ''
       });
       setSuccess('Kayıt başarılı! Giriş yapabilirsiniz.');
       setTab('login');
-      setRegStep('form');
-      setVerifyCode('');
       setRegData({ buildingName:'', buildingPassword:'', name:'', email:'', phone:'', block:'', no:'', password:'', passwordConfirm:'', userType:'Kiracı' });
     } catch (err) {
       setError(err.response?.data?.message || 'Kayıt başarısız, tekrar deneyin.');
-    } finally { setLoading(false); }
-  };
-
-  const handleResendCode = async () => {
-    setError(''); setLoading(true);
-    try {
-      await sendVerificationCode({ email: regData.email });
-      setSuccess('Kod tekrar gönderildi.');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Kod gönderilemedi.');
     } finally { setLoading(false); }
   };
 
@@ -123,7 +92,6 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #0f172a 100%)' }}>
 
-      {/* Arka plan */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-8%] w-[520px] h-[520px] rounded-full anim-float-1"
           style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)', filter: 'blur(40px)' }} />
@@ -135,7 +103,6 @@ const Login = () => {
           style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
       </div>
 
-      {/* Kart */}
       <div className="max-w-md w-full relative anim-fade-up">
         <div className="rounded-3xl overflow-hidden"
           style={{
@@ -144,7 +111,6 @@ const Login = () => {
             boxShadow: '0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10)'
           }}>
 
-          {/* Üst başlık */}
           <div className="p-4 md:p-6 text-center text-white"
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.85) 0%, rgba(99,102,241,0.85) 100%)', borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
             <div className="inline-flex p-3 rounded-2xl mb-3"
@@ -155,21 +121,17 @@ const Login = () => {
             <p className="text-blue-100/80 text-xs mt-1">Apartman Yönetim Sistemi</p>
           </div>
 
-          {/* Tab seçici */}
           <div className="flex border-b border-slate-200" style={{ background: 'rgba(255,255,255,0.97)' }}>
             {[['login', 'Giriş Yap'], ['register', 'Kayıt Ol']].map(([key, label]) => (
-              <button key={key} type="button" onClick={() => { setTab(key); setError(''); setSuccess(''); setRegStep('form'); setVerifyCode(''); }}
+              <button key={key} type="button" onClick={() => { setTab(key); setError(''); setSuccess(''); }}
                 className={`flex-1 py-3 text-sm font-semibold transition-all duration-150 ${
-                  tab === key
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-slate-400 hover:text-slate-600'
+                  tab === key ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'
                 }`}>
                 {label}
               </button>
             ))}
           </div>
 
-          {/* Form alanı */}
           <div className="p-5 md:p-6" style={{ background: 'rgba(255,255,255,0.97)' }}>
 
             {success && (
@@ -178,7 +140,7 @@ const Login = () => {
               </div>
             )}
 
-            {/* LOGIN FORMU */}
+            {/* LOGIN */}
             {tab === 'login' && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
@@ -186,7 +148,7 @@ const Login = () => {
                   <div className="relative">
                     <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input type="email" placeholder="ornek@mail.com" required
-                      className="input-field pl-10 pr-10"
+                      className="input-field pl-10"
                       value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} />
                   </div>
                 </div>
@@ -208,9 +170,9 @@ const Login = () => {
               </form>
             )}
 
-            {/* KAYIT — ADIM 1: FORM */}
-            {tab === 'register' && regStep === 'form' && (
-              <form onSubmit={handleSendCode} className="space-y-3">
+            {/* KAYIT */}
+            {tab === 'register' && (
+              <form onSubmit={handleRegister} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Bina Adı</label>
@@ -346,54 +308,8 @@ const Login = () => {
 
                 <button type="submit" disabled={loading}
                   className="w-full btn-primary justify-center py-3 rounded-xl disabled:opacity-60">
-                  {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kod gönderiliyor...</> : 'Doğrulama Kodu Gönder'}
+                  {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor...</> : 'Kayıt Ol'}
                 </button>
-              </form>
-            )}
-
-            {/* KAYIT — ADIM 2: KOD DOĞRULAMA */}
-            {tab === 'register' && regStep === 'verify' && (
-              <form onSubmit={handleVerifyAndRegister} className="space-y-4">
-                <div className="text-center py-2">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 mb-3">
-                    <ShieldCheck size={28} className="text-blue-600" />
-                  </div>
-                  <h3 className="font-bold text-slate-800 text-base">E-postanızı doğrulayın</h3>
-                  <p className="text-slate-500 text-xs mt-1">
-                    <span className="font-semibold text-slate-700">{regData.email}</span> adresine 6 haneli bir doğrulama kodu gönderdik.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Doğrulama Kodu</label>
-                  <input
-                    type="text" inputMode="numeric" maxLength={6} required
-                    placeholder="000000"
-                    className="input-field text-center text-2xl font-bold tracking-widest"
-                    value={verifyCode}
-                    onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  />
-                  <p className="text-xs text-slate-400 mt-1 text-center">Kod 10 dakika geçerlidir</p>
-                </div>
-
-                {error && <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-xl"><div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />{error}</div>}
-                {success && <div className="flex items-center gap-2 text-green-700 text-sm bg-green-50 border border-green-200 p-3 rounded-xl"><CheckCircle size={14} /> {success}</div>}
-
-                <button type="submit" disabled={loading || verifyCode.length < 6}
-                  className="w-full btn-primary justify-center py-3 rounded-xl disabled:opacity-60">
-                  {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor...</> : 'Doğrula ve Kayıt Ol'}
-                </button>
-
-                <div className="flex items-center justify-between pt-1">
-                  <button type="button" onClick={() => { setRegStep('form'); setError(''); setVerifyCode(''); }}
-                    className="text-xs text-slate-500 hover:text-slate-700 transition-colors">
-                    ← Geri dön
-                  </button>
-                  <button type="button" onClick={handleResendCode} disabled={loading}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-semibold transition-colors disabled:opacity-50">
-                    Kodu tekrar gönder
-                  </button>
-                </div>
               </form>
             )}
 
